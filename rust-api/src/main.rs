@@ -1,18 +1,13 @@
-
-use std::time::Duration;
-
-use bcrypt::{hash, verify, DEFAULT_COST};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use bcrypt::{verify };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-use chrono::Local;
 use argon2::{
     password_hash::{
         rand_core::OsRng,
-        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
+        PasswordHash, PasswordHasher, SaltString
     },
     Argon2
 };
+use jsonwebtoken::{EncodingKey, Header};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -22,15 +17,17 @@ pub struct Claims {
     exp: i64,
 }
 
-fn hash_password(password: &str, salt: &str) -> Result<String, bcrypt::BcryptError> {
+fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<PasswordHash<'a>, argon2::password_hash::Error> {
     let argon2 = Argon2::default();
-    let password_hash = argon2.hash_password(password.as_bytes(), salt.as_ref())?.to_string();
+
+    let salt_clone = salt.as_salt().to_owned();
+
+    let password_hash = argon2.hash_password(password.as_bytes(), *&salt_clone)?;
 
     Ok(password_hash)
 }
-
-fn generate_salt() -> String {
-    SaltString::generate(&mut OsRng).to_string()
+fn generate_salt() -> SaltString {
+    SaltString::generate(&mut OsRng)
 }
 
 fn verify_password(password: &str, salt: &str, hash: &str) -> Result<bool, bcrypt::BcryptError> {
@@ -38,39 +35,40 @@ fn verify_password(password: &str, salt: &str, hash: &str) -> Result<bool, bcryp
     verify(&salted_password, hash)
 }
 
-fn initialize_claim(client_id: i32 ) -> Claims {
-    let now = Local::now();
-    let iat = now.timestamp();
-    let exp = (now + Duration::hours(1)).timestamp();
-    Claims {
-        iss: client_id.to_string(),
-        sub: Uuid::new_v4().to_string(),
-        iat,
-        exp,
-    }
-}
+
 
 fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
     
-    let mut header = Header::new(jsonwebtoken::Algorithm::RS256);
+    let mut header = Header::new(jsonwebtoken::Algorithm::HS256);
     header.typ = Some("JWT".to_string());
 
-    let key = EncodingKey::from_rsa_pem(include_bytes!("private_key.pem"))?;
-    let jwt = encode(&header, &claims, &key);
+    //let key = EncodingKey::from_rsa_pem(include_bytes!("private_key.pem"))?;
+    let key = EncodingKey::from_base64_secret("FFGONEXT").unwrap();
+    let jwt = jsonwebtoken::encode(&header, &claims, &key);
 
     Ok(jwt?)
 }
 
 fn main() {
     // Hash a password
-    let salt = "random_salt".to_string();
-    let password_hash = hash_password("password", &salt).unwrap();
-    println!("Password Hash: {}", password_hash);
+    let salt = generate_salt();
+    let password_hash = hash_password("aled", &salt).unwrap();
 
-    // Verify a password
-    let is_valid = verify_password("password", &salt, &password_hash).unwrap();
-    println!("Password is valid: {}", is_valid);
+    // pirnt the hashed password
+    println!("Hashed password: {}", password_hash.hash.unwrap());
+    let claims = Claims {
+        iss: "FFGONEXT".to_string(),
+        sub: "FFGONEXT".to_string(),
+        iat: 0,
+        exp: 0,
+    };
 
-    let token = create_jwt(claims).unwrap();
-    println!("JWT: {}", token);
+    let jwt = match create_jwt(claims) {
+        Ok(jwt) => jwt,
+        Err(err) => {
+            eprintln!("Failed to create JWT: {}", err);
+            return;
+        }
+    };
+    println!("{}", jwt);
 }
