@@ -2,7 +2,6 @@ use actix_web::{HttpResponse, Responder, web};
 use argon2::{Argon2, PasswordHash, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
-use bcrypt::verify;
 use jsonwebtoken::{EncodingKey, Header};
 
 use crate::Claims;
@@ -40,14 +39,6 @@ fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<Password
 fn generate_salt() -> SaltString {
     SaltString::generate(&mut OsRng)
 }
-
-fn verify_password(password: &str, salt: &str, hash: &str) -> Result<bool, bcrypt::BcryptError> {
-    let salted_password = format!("{}{}", password, salt);
-    verify(&salted_password, hash)
-}
-
-
-
 fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
 
     let mut header = Header::new(jsonwebtoken::Algorithm::HS256);
@@ -61,7 +52,7 @@ fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
 #[actix_web::post("/login")]
 pub async fn login(user: web::Json<UserAuth>) -> impl Responder {
     // Deserialize JSON to User struct
-    let user: UserAuth = user.into_inner();
+    let _user: UserAuth = user.into_inner();
 
     // TODO get user from db
 
@@ -97,7 +88,7 @@ pub async fn register(user: web::Json<UserAuth>) -> impl Responder {
 }
 
 #[actix_web::post("/users")]
-pub async fn add_user(user: web::Json<UserAuth>) -> impl Responder {
+pub async fn add_user(_user: web::Json<UserAuth>) -> impl Responder {
     // Here you can add the user to the database.
     // For now, let's just return the user data as JSON.
    "ff"
