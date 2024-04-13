@@ -10,3 +10,7 @@ pub struct User {
     pub password_salt: String,
     pub password_hash: String
 }
+
+pub(crate) fn ff () {
+
+}

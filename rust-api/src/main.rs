@@ -8,7 +8,19 @@ use argon2::{
     Argon2
 };
 use jsonwebtoken::{EncodingKey, Header};
+use actix_web::{web, HttpResponse, Responder, get, HttpServer, App};
 
+mod view{
+    pub mod user;
+    pub mod achievement;
+    pub mod ranking;
+}
+
+mod models{
+    pub mod user;
+    pub mod achievement;
+    pub mod ranking;
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     iss: String,
@@ -49,7 +61,12 @@ fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
     Ok(jwt?)
 }
 
-fn main() {
+#[get("/")]
+pub async fn index() -> impl Responder {
+    "Hello, world!"
+}
+
+/*fn main() {
     // Hash a password
     let salt = generate_salt();
     let password_hash = hash_password("aled", &salt).unwrap();
@@ -63,6 +80,8 @@ fn main() {
         exp: 0,
     };
 
+
+
     let jwt = match create_jwt(claims) {
         Ok(jwt) => jwt,
         Err(err) => {
@@ -71,4 +90,16 @@ fn main() {
         }
     };
     println!("{}", jwt);
+}*/
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+
+    HttpServer::new(|| {
+        App::new()
+            .service(index)
+    })
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 }
