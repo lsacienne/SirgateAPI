@@ -1,8 +1,5 @@
 use std::env;
 use actix_web::{App, get, HttpServer, Responder};
-use diesel::{connection, PgConnection};
-use actix_web::{App, get, HttpServer, Responder};
-use argon2::password_hash::PasswordHasher;
 use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
 use crate::controller::database_manager::establish_connection;
@@ -86,14 +83,6 @@ type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    dotenv::dotenv().ok();
-
-    /*let uri = match env::var("API_Address") {
-        Ok(uri) => uri,
-        Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
-    };*/
-
-    println!("Launched server ...");
     HttpServer::new(|| {
 
         let url =  env::var("DATABASE_URL").unwrap() ;
