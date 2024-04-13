@@ -1,3 +1,5 @@
+use actix_web::{App, get, HttpServer, Responder};
+use argon2::password_hash::PasswordHasher;
 use std::env;
 use actix_web::{App, get, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
@@ -39,7 +41,6 @@ pub async fn index() -> impl Responder {
 
 /*fn main() {
     // Hash a password
-    /*
     let salt = generate_salt();
     let password_hash = hash_password("aled", &salt).unwrap();
 
