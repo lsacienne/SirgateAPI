@@ -102,6 +102,12 @@ type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
+    dotenv::dotenv().ok();
+    let uri = match env::var("API_Address") {
+        Ok(uri) => uri,
+        Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
+    };
+    println!("Launched server at {}" , uri);
     HttpServer::new(|| {
 
         let url =  env::var("DATABASE_URL").unwrap() ;
