@@ -1,8 +1,6 @@
-use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::users)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -10,7 +8,16 @@ pub struct User {
     pub password_salt: String,
     pub password_hash: String
 }
-
-pub(crate) fn ff () {
-
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserAuth {
+    pub username: String,
+    pub email: String,
+    pub password: String
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DGS{
+    pub id: i32,
+    pub label: String
+}
+

@@ -1,14 +1,6 @@
-use bcrypt::{verify };
+use actix_web::{App, get, HttpServer, Responder};
+use argon2::password_hash::PasswordHasher;
 use serde::{Deserialize, Serialize};
-use argon2::{
-    password_hash::{
-        rand_core::OsRng,
-        PasswordHash, PasswordHasher, SaltString
-    },
-    Argon2
-};
-use jsonwebtoken::{EncodingKey, Header};
-use actix_web::{web, HttpResponse, Responder, get, HttpServer, App};
 
 mod view{
     pub mod user;
@@ -29,37 +21,6 @@ pub struct Claims {
     exp: i64,
 }
 
-fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<PasswordHash<'a>, argon2::password_hash::Error> {
-    let argon2 = Argon2::default();
-
-    let salt_clone = salt.as_salt().to_owned();
-
-    let password_hash = argon2.hash_password(password.as_bytes(), *&salt_clone)?;
-
-    Ok(password_hash)
-}
-fn generate_salt() -> SaltString {
-    SaltString::generate(&mut OsRng)
-}
-
-fn verify_password(password: &str, salt: &str, hash: &str) -> Result<bool, bcrypt::BcryptError> {
-    let salted_password = format!("{}{}", password, salt);
-    verify(&salted_password, hash)
-}
-
-
-
-fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
-    
-    let mut header = Header::new(jsonwebtoken::Algorithm::HS256);
-    header.typ = Some("JWT".to_string());
-
-    //let key = EncodingKey::from_rsa_pem(include_bytes!("private_key.pem"))?;
-    let key = EncodingKey::from_base64_secret("FFGONEXT").unwrap();
-    let jwt = jsonwebtoken::encode(&header, &claims, &key);
-
-    Ok(jwt?)
-}
 
 #[get("/")]
 pub async fn index() -> impl Responder {
@@ -98,6 +59,16 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(index)
+            .service(view::user::add_user)
+            .service(view::user::get_users)
+            .service(view::user::get_user_by_username_email)
+            .service(view::user::login)
+            .service(view::user::register)
+            .service(view::user::update_user)
+            .service(view::user::delete_user)
+            .service(view::user::add_dgs)
+            .service(view::user::get_user_by_id)
+            .service(view::user::dgs_login)
     })
         .bind("127.0.0.1:8080")?
         .run()
