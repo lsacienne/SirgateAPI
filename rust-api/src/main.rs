@@ -1,5 +1,5 @@
+use std::env;
 use actix_web::{App, get, HttpServer, Responder};
-use argon2::password_hash::PasswordHasher;
 use serde::{Deserialize, Serialize};
 
 mod view{
@@ -56,6 +56,12 @@ pub async fn index() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
+    dotenv::dotenv().ok();
+    let uri = match env::var("API_Address") {
+        Ok(uri) => uri,
+        Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
+    };
+    println!("Launched server at {}" , uri);
     HttpServer::new(|| {
         App::new()
             .service(index)
