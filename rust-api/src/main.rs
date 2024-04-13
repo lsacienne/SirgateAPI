@@ -1,6 +1,8 @@
 use std::env;
 use actix_web::{App, get, HttpServer, Responder};
 use diesel::{connection, PgConnection};
+use actix_web::{App, get, HttpServer, Responder};
+use argon2::password_hash::PasswordHasher;
 use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
 use crate::controller::database_manager::establish_connection;
@@ -46,6 +48,7 @@ pub async fn index() -> impl Responder {
     "Hello, world!"
 }
 
+/*fn main() {
 /*fn main() {
     // Hash a password
 
