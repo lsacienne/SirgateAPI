@@ -1,4 +1,4 @@
-use bcrypt::{verify };
+use bcrypt::verify;
 use serde::{Deserialize, Serialize};
 use argon2::{
     password_hash::{
@@ -11,16 +11,23 @@ use jsonwebtoken::{EncodingKey, Header};
 use actix_web::{web, HttpResponse, Responder, get, HttpServer, App};
 
 mod view{
-    pub mod user;
+    pub mod client;
     pub mod achievement;
+    pub mod ranking;
+}
+mod models{
+    pub mod client;
+    pub mod achievement;
+    pub mod ranking;
+}
+mod controller{
+    pub mod database_manager;
+    pub mod client;
     pub mod ranking;
 }
 
-mod models{
-    pub mod user;
-    pub mod achievement;
-    pub mod ranking;
-}
+mod schema;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     iss: String,
