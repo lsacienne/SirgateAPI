@@ -19,11 +19,13 @@ mod models{
     pub mod client;
     pub mod achievement;
     pub mod ranking;
+    pub mod friends;
 }
 mod controller{
     pub mod database_manager;
     pub mod client;
     pub mod ranking;
+    pub mod friends;
 }
 
 mod schema;
