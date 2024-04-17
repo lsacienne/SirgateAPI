@@ -1,4 +1,4 @@
-use diesel::{associations::{Identifiable, Associations}, deserialize::Queryable, Selectable};
+use diesel::{associations::{Identifiable, Associations}, deserialize::Queryable, Selectable, Insertable};
 use serde::{Deserialize, Serialize};
 use crate::models::client::Client;
 
@@ -12,7 +12,7 @@ pub struct Achievement {
     pub image: Option<String>
 }
 
-#[derive(Queryable, Selectable, Associations, Identifiable, Serialize, Deserialize)]
+#[derive(Queryable, Insertable, Selectable, Associations, Identifiable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::client_achievement)]
 #[diesel(belongs_to(Client))]
 #[diesel(belongs_to(Achievement))]
