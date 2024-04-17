@@ -1,4 +1,4 @@
-use bcrypt::{verify };
+use bcrypt::verify;
 use serde::{Deserialize, Serialize};
 use argon2::{
     password_hash::{
@@ -11,16 +11,26 @@ use jsonwebtoken::{EncodingKey, Header};
 use actix_web::{web, HttpResponse, Responder, get, HttpServer, App};
 
 mod view{
-    pub mod user;
+    pub mod client;
     pub mod achievement;
     pub mod ranking;
+}
+mod models{
+    pub mod client;
+    pub mod achievement;
+    pub mod ranking;
+    pub mod friends;
+}
+mod controller{
+    pub mod achievement;
+    pub mod database_manager;
+    pub mod client;
+    pub mod ranking;
+    pub mod friends;
 }
 
-mod models{
-    pub mod user;
-    pub mod achievement;
-    pub mod ranking;
-}
+mod schema;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     iss: String,
@@ -66,8 +76,37 @@ pub async fn index() -> impl Responder {
     "Hello, world!"
 }
 
-/*fn main() {
+fn main() {
+    use schema::client::dsl::*;
+
+    let connection = &mut controller::database_manager::establish_connection();
+
+    controller::client::add_user(
+        connection,
+        "aled2",
+        "aled2",
+        "aled",
+        "aled"
+    );
+
+    let results = controller::client::show_users(connection);
+
+    println!("Displaying {} users", results.len());
+
+    for user in results {
+        println!("id: {}, Name: {}, Email: {}", user.id, user.username, user.email);
+    }
+
+    let limited_results = controller::client::show_limited_users(connection, 2);
+
+    println!("Displaying {} users", limited_results.len());
+
+    for user in limited_results {
+        println!("id: {}, Name: {}, Email: {}", user.id, user.username, user.email);
+    }
+
     // Hash a password
+    /*
     let salt = generate_salt();
     let password_hash = hash_password("aled", &salt).unwrap();
 
@@ -90,16 +129,16 @@ pub async fn index() -> impl Responder {
         }
     };
     println!("{}", jwt);
-}*/
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-
-    HttpServer::new(|| {
-        App::new()
-            .service(index)
-    })
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
+     */
 }
+// #[actix_web::main]
+// async fn main() -> std::io::Result<()> {
+
+//     HttpServer::new(|| {
+//         App::new()
+//             .service(index)
+//     })
+//         .bind("127.0.0.1:8080")?
+//         .run()
+//         .await
+// }
