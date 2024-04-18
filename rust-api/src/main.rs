@@ -3,11 +3,11 @@ use actix_web::{App, get, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
 
 mod view{
+    pub mod client;
     pub mod user;
     pub mod achievement;
     pub mod ranking;
 }
-
 mod models{
     pub mod user;
     pub mod achievement;
@@ -40,6 +40,7 @@ pub async fn index() -> impl Responder {
 
 /*fn main() {
     // Hash a password
+
     let salt = generate_salt();
     let password_hash = hash_password("aled", &salt).unwrap();
 
@@ -62,17 +63,17 @@ pub async fn index() -> impl Responder {
         }
     };
     println!("{}", jwt);
-}*/
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
+} */
+ #[actix_web::main]
+ async fn main() -> std::io::Result<()> {
 
     dotenv::dotenv().ok();
-    let uri = match env::var("API_Address") {
+    /*let uri = match env::var("API_Address") {
         Ok(uri) => uri,
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
-    };
-    println!("Launched server at {}" , uri);
+    };*/
+    println!("Launched server ");
     HttpServer::new(|| {
         App::new()
             .service(index)
@@ -87,7 +88,7 @@ async fn main() -> std::io::Result<()> {
             .service(view::user::get_user_by_id)
             .service(view::user::dgs_login)
     })
-        .bind("127.0.0.1:8080")?
+        .bind("localhost:8080")?
         .run()
         .await
 }
