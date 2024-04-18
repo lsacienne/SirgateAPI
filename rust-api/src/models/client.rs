@@ -15,12 +15,6 @@ pub struct Client {
     pub role_id: i32,
     pub rank_id: i32,
 }
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ClientAuth {
-    pub username: String,
-    pub email: String,
-    pub password: String
-}
 
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::client)]

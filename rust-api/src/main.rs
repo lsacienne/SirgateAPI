@@ -1,5 +1,6 @@
 use std::env;
 use actix_web::{App, get, HttpServer, Responder};
+use diesel::{connection, PgConnection};
 use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
 use crate::controller::database_manager::establish_connection;
@@ -12,13 +13,11 @@ use r2d2_postgres::postgres::Config;
 
 mod view{
     pub mod client;
-    pub mod user;
     pub mod achievement;
     pub mod ranking;
 }
 mod models{
     pub mod client;
-    pub mod user;
     pub mod achievement;
     pub mod dgs;
     pub mod ranking;
@@ -74,10 +73,18 @@ pub async fn index() -> impl Responder {
     println!("{}", jwt);
 
 } */
- #[actix_web::main]
- async fn main() -> std::io::Result<()> {
+
+ lazy_static!{
+       pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
+     }
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
 
     dotenv::dotenv().ok();
+
+
+
+
     /*let uri = match env::var("API_Address") {
         Ok(uri) => uri,
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
