@@ -3,20 +3,18 @@ services:
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_USER: shooteradmin
-      POSTGRES_PASSWORD: ff
-      POSTGRES_DB: ShooterDB
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
     volumes:
-      - mydb-shootervolume:/var/lib/postgresql/data
-      - ./postgres/dump:/docker-entrypoint-initdb.d/
-    ports:
-      - "5432:5432"
+      - mydb-volume:/var/lib/postgresql/data
     networks:
-      - postgres-network
+      - mynetwork
+
   redis:
     image: redis:latest
     networks:
-      - redis-network
+      - mynetwork
 
   webapp:
     build: rust-api
@@ -26,14 +24,10 @@ services:
       - postgres
       - redis
     networks:
-      - postgres-network
-      - redis-network
-    env_file:
-      - ./rust-api/.env
+      - mynetwork
 
 volumes:
-  mydb-shootervolume:
+  mydb-volume:
 
 networks:
-  redis-network:
-  postgres-network:
+  mynetwork:
