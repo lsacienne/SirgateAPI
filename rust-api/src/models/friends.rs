@@ -8,3 +8,9 @@ pub struct Friend {
     pub client1_id: uuid::Uuid,
     pub client2_id: uuid::Uuid
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct FriendAuth {
+    pub client1_id: String,
+    pub client2_id: String
+}
