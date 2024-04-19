@@ -18,6 +18,7 @@ mod view{
 mod models{
     pub mod client;
     pub mod achievement;
+    pub mod dgs;
     pub mod ranking;
     pub mod friends;
 }
@@ -79,31 +80,11 @@ pub async fn index() -> impl Responder {
 fn main() {
     use schema::client::dsl::*;
 
-    let connection = &mut controller::database_manager::establish_connection();
+    let connection = &mut controller::database_manager::establish_redis_connection();
 
-    controller::client::add_user(
-        connection,
-        "aled2",
-        "aled2",
-        "aled",
-        "aled"
-    );
+    
 
-    let results = controller::client::show_users(connection);
-
-    println!("Displaying {} users", results.len());
-
-    for user in results {
-        println!("id: {}, Name: {}, Email: {}", user.id, user.username, user.email);
-    }
-
-    let limited_results = controller::client::show_limited_users(connection, 2);
-
-    println!("Displaying {} users", limited_results.len());
-
-    for user in limited_results {
-        println!("id: {}, Name: {}, Email: {}", user.id, user.username, user.email);
-    }
+    
 
     // Hash a password
     /*
