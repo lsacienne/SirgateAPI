@@ -77,14 +77,11 @@ async fn main() -> std::io::Result<()> {
 
     dotenv::dotenv().ok();
 
-
-
-
     /*let uri = match env::var("API_Address") {
         Ok(uri) => uri,
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
     };*/
-    println!("Launched server ");
+    println!("Launched server ...");
     HttpServer::new(|| {
         App::new()
             .service(index)
@@ -95,7 +92,7 @@ async fn main() -> std::io::Result<()> {
             .service(view::client::add_dgs)
             .service(view::client::dgs_login)
     })
-        .bind("localhost:8080")?
+        .bind("0.0.0.0:8080")?
         .run()
         .await
 }
