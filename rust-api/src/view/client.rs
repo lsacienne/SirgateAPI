@@ -111,7 +111,7 @@ pub async fn register(user: web::Json<ClientAuth>) -> impl Responder {
         iat: 0,
         exp: 0,
     };
-    create_jwt(claims).unwrap()
+    HttpResponse::Ok().body(create_jwt(claims).unwrap())
 }
 
 
