@@ -78,6 +78,10 @@ pub async fn login(user: web::Json<ClientAuth>) -> impl Responder {
 
     let argon2 = Argon2::default();
 
+    println!("{}", hashed_password.hash.unwrap().to_string());
+    println!("{}", user.password);
+
+
     if hashed_password.hash.unwrap().to_string() == user.password{
         let claims = Claims {
             iss: user.id.clone().to_string(),
@@ -103,7 +107,7 @@ pub async fn register(user: web::Json<ClientAuth>) -> impl Responder {
     let hash= hash_password(&*user.password, &salt).unwrap();
 
     let mut conn =&mut GLOBAL_CONNECTION.lock().unwrap();
-    let client = add_user(conn, &*user.username,&* user.email,&*hash.to_string(), salt.as_ref());
+    let client = add_user(conn, &*user.username,&* user.email,&*hash.hash.unwrap().to_string(), salt.as_ref());
 
     let claims = Claims {
         iss: client.id.clone().to_string(),
@@ -111,7 +115,7 @@ pub async fn register(user: web::Json<ClientAuth>) -> impl Responder {
         iat: 0,
         exp: 0,
     };
-    create_jwt(claims).unwrap()
+    HttpResponse::Ok().body(create_jwt(claims).unwrap())
 }
 
 
@@ -147,5 +151,6 @@ pub async fn dgs_login(server: web::Json<DGS>) -> impl Responder {
         iat: 0,
         exp: 0,
     };
+    println!("FFFFFF!");
     HttpResponse::Ok().body(create_jwt(claims).unwrap())
 }
