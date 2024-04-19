@@ -24,3 +24,10 @@ pub struct InsertableClient<'a> {
     pub password: &'a str,
     pub salt: &'a str
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CacheClient<'a> {
+    pub id: uuid::Uuid,
+    pub username: &'a str,
+    pub rank_id: i32,
+}
