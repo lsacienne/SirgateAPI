@@ -1,13 +1,14 @@
 version: '3'
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:14
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ShooterDB
     volumes:
-      - mydb-volume:/var/lib/postgresql/data
+      - mydb-shootervolume:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - mynetwork
 
@@ -25,9 +26,11 @@ services:
       - redis
     networks:
       - mynetwork
+    env_file:
+      - ./rust-api/.env
 
 volumes:
-  mydb-volume:
+  mydb-shootervolume:
 
 networks:
   mynetwork:
