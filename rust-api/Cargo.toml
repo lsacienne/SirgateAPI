@@ -17,6 +17,6 @@ argon2 = { version = "0.5.3" }
 chrono = "0.4.37"
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
-
+redis = { version = "0.25.3", features = ["json"]}
 r2d2 = "0.8.9"
 r2d2_postgres = "0.17.0"
