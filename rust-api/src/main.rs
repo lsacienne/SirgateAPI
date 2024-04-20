@@ -5,6 +5,11 @@ use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
 use crate::controller::database_manager::establish_connection;
 use std::sync::Mutex;
+use diesel::r2d2::ConnectionManager;
+use r2d2_postgres::{postgres, PostgresConnectionManager};
+use r2d2::PooledConnection;
+use r2d2_postgres::postgres::Config;
+
 
 mod view{
     pub mod client;
@@ -70,9 +75,12 @@ pub async fn index() -> impl Responder {
 
 } */
 
- lazy_static!{
+
+ /*lazy_static!{
        pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
-     }
+     }*/
+type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
@@ -82,9 +90,18 @@ async fn main() -> std::io::Result<()> {
         Ok(uri) => uri,
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
     };*/
+
     println!("Launched server ...");
     HttpServer::new(|| {
+
+        let url =  env::var("DATABASE_URL").unwrap() ;
+
+        let manager = ConnectionManager::<PgConnection>::new(url);
+        let pool = r2d2::Pool::builder()
+            .build(manager)
+            .expect("database URL should be valid path to Postgres DB file");
         App::new()
+            .app_data(actix_web::web::Data::new(pool))
             .service(index)
             .service(view::client::login)
             .service(view::client::register)
