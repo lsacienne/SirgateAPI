@@ -74,9 +74,12 @@ pub async fn index() -> impl Responder {
 
 } */
 
- lazy_static!{
+
+ /*lazy_static!{
        pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
-     }
+     }*/
+type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
