@@ -25,6 +25,7 @@ mod models{
 mod controller{
     pub mod achievement;
     pub mod database_manager;
+    pub mod dgs;
     pub mod client;
     pub mod ranking;
     pub mod friends;
