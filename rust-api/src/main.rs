@@ -19,6 +19,7 @@ mod view{
 mod models{
     pub mod client;
     pub mod achievement;
+    pub mod friends;
     pub mod dgs;
     pub mod ranking;
 }

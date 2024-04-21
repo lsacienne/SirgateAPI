@@ -9,7 +9,7 @@ use r2d2_postgres::postgres::fallible_iterator::FallibleIterator;
 //use crate::GLOBAL_CONNECTION;
 use crate::Claims;
 use crate::controller::client::{add_user, get_user_by_email, get_user_by_username};
-use crate::models::client::{DGS, Client, ClientAuth, InsertableClient};
+use crate::models::client::{Client, ClientAuth, InsertableClient};
 use crate::DbPool;
 
 
@@ -150,22 +150,16 @@ pub async fn get_user_by_username_email(user: web::Json<ClientAuth>) -> impl Res
 }
 
 #[actix_web::post("/dgs/add")]
-pub async fn add_dgs(server: web::Json<DGS>) -> impl Responder {
+pub async fn add_dgs() -> impl Responder {
     // Here you can add the user to the database.
     // For now, let's just return the user data as JSON.
-    HttpResponse::Ok().body(format!("Add DGS: {}", server.label))
+    HttpResponse::Ok()
 }
 
 #[actix_web::get("/dgs/login")]
-pub async fn dgs_login(server: web::Json<DGS>) -> impl Responder {
+pub async fn dgs_login() -> impl Responder {
     // Here you can add the user to the database.
     // For now, let's just return the user data as JSON.
-    let claims = Claims {
-        iss: server.id.clone().to_string(),
-        sub: server.label.clone(),
-        iat: 0,
-        exp: 0,
-    };
-    println!("FFFFFF!");
-    HttpResponse::Ok().body(create_jwt(claims).unwrap())
+    
+    HttpResponse::Ok()
 }
