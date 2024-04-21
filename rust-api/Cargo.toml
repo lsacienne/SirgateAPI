@@ -9,6 +9,7 @@ edition = "2021"
 uuid = { version = "1.8.0", features = ["serde", "v4"] }
 redis = { version = "0.25.3", features = ["json"]}
 diesel = { version = "2.1.0", features = ["postgres", "uuid", "r2d2"] }
+redis = { version = "0.25.3", features = ["json"]}
 actix-web = "4"
 dotenvy = "0.15"
 jsonwebtoken = "9.3.0"
