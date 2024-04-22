@@ -48,10 +48,16 @@ fn generate_salt() -> SaltString {
 }
 
 fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
+    dotenv::dotenv().ok();
+    let secret = match dotenv::var("JWT_SECRET") {
+        Ok(secret) => secret,
+        Err(_) => return Err(jsonwebtoken::errors::ErrorKind::InvalidEcdsaKey.into())
+    };
+
     let mut header = Header::new(jsonwebtoken::Algorithm::HS256);
     header.typ = Some("JWT".to_string());
 
-    let key = EncodingKey::from_base64_secret("FFGONEXT").unwrap();
+    let key = EncodingKey::from_base64_secret(&secret).unwrap();
     let jwt = jsonwebtoken::encode(&header, &claims, &key);
 
     Ok(jwt?)
