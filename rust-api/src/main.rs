@@ -1,46 +1,7 @@
 use std::env;
 use actix_web::{App, get, HttpServer, Responder};
-use diesel::{connection, PgConnection};
-use serde::{Deserialize, Serialize};
-use lazy_static::lazy_static;
-use crate::controller::database_manager::establish_connection;
-use std::sync::Mutex;
+use diesel::PgConnection;
 use diesel::r2d2::ConnectionManager;
-use r2d2_postgres::{postgres, PostgresConnectionManager};
-use r2d2::PooledConnection;
-use r2d2_postgres::postgres::Config;
-
-
-mod view{
-    pub mod client;
-    pub mod achievement;
-    pub mod ranking;
-}
-mod models{
-    pub mod client;
-    pub mod achievement;
-    pub mod friends;
-    pub mod dgs;
-    pub mod ranking;
-}
-mod controller{
-    pub mod database_manager;
-    pub mod dgs;
-    pub mod client;
-    pub mod ranking;
-    pub mod friends;
-}
-
-mod schema;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    iss: String,
-    sub: String,
-    iat: i64,
-    exp: i64,
-}
-
 
 #[get("/")]
 pub async fn index() -> impl Responder {
@@ -79,7 +40,6 @@ pub async fn index() -> impl Responder {
  /*lazy_static!{
        pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
      }*/
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -103,12 +63,12 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(actix_web::web::Data::new(pool))
             .service(index)
-            .service(view::client::login)
-            .service(view::client::register)
-            .service(view::client::get_users)
-            .service(view::client::get_user_by_username_email)
-            .service(view::client::add_dgs)
-            .service(view::client::dgs_login)
+            .service(rust_api::view::client::login)
+            .service(rust_api::view::client::register)
+            .service(rust_api::view::client::get_users)
+            .service(rust_api::view::client::get_user_by_username_email)
+            .service(rust_api::view::client::add_dgs)
+            .service(rust_api::view::client::dgs_login)
     })
         .bind("0.0.0.0:8080")?
         .run()
