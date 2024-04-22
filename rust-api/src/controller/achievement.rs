@@ -48,3 +48,17 @@ pub fn add_achievement(
         }
     }
 }
+
+pub fn get_all_achievements(connection: &mut PgConnection, _client_id: uuid::Uuid) -> Vec<Achievement> {
+    use crate::schema::client_achievement;
+    use crate::schema::achievement;
+
+    client_achievement::table
+        .inner_join(achievement::table.on(achievement::id.eq(client_achievement::achievement_id)))
+        .filter(
+            client_achievement::client_id.eq(_client_id)
+        )
+        .select(achievement::all_columns) // Select the desired columns
+        .load(connection)
+        .expect("Error loading achievements")
+}
