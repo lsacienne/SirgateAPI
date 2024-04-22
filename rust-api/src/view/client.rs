@@ -133,7 +133,6 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
     Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
 }
 
-
 #[actix_web::get("/users")]
 pub async fn get_users() -> impl Responder {
     // Here you can add the user to the database.

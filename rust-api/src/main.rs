@@ -5,6 +5,13 @@ use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
 use crate::controller::database_manager::establish_connection;
 use std::sync::Mutex;
+use std::env;
+use actix_web::{App, get, HttpServer, Responder};
+use diesel::{connection, PgConnection};
+use serde::{Deserialize, Serialize};
+use lazy_static::lazy_static;
+use crate::controller::database_manager::establish_connection;
+use std::sync::Mutex;
 use diesel::r2d2::ConnectionManager;
 use r2d2_postgres::{postgres, PostgresConnectionManager};
 use r2d2::PooledConnection;
@@ -48,8 +55,8 @@ pub async fn index() -> impl Responder {
 }
 
 /*fn main() {
-/*fn main() {
     // Hash a password
+
     let salt = generate_salt();
     let password_hash = hash_password("aled", &salt).unwrap();
 
@@ -90,25 +97,8 @@ async fn main() -> std::io::Result<()> {
         Ok(uri) => uri,
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
     };*/
-    println!("Launched server ");
 
-} */
-
-
- /*lazy_static!{
-       pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
-     }*/
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-
-    dotenv::dotenv().ok();
-    let uri = match env::var("API_Address") {
-        Ok(uri) => uri,
-        Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
-    };
-    println!("Launched server at {}" , uri);
+    println!("Launched server ...");
     HttpServer::new(|| {
 
         let url =  env::var("DATABASE_URL").unwrap() ;

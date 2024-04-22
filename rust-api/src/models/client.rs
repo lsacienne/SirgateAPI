@@ -37,3 +37,4 @@ pub struct CacheClient {
     pub username: String,
     pub rank_id: i32,
 }
+
