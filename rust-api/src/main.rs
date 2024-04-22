@@ -5,6 +5,13 @@ use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
 use crate::controller::database_manager::establish_connection;
 use std::sync::Mutex;
+use std::env;
+use actix_web::{App, get, HttpServer, Responder};
+use diesel::{connection, PgConnection};
+use serde::{Deserialize, Serialize};
+use lazy_static::lazy_static;
+use crate::controller::database_manager::establish_connection;
+use std::sync::Mutex;
 use diesel::r2d2::ConnectionManager;
 use r2d2_postgres::{postgres, PostgresConnectionManager};
 use r2d2::PooledConnection;
@@ -19,11 +26,13 @@ mod view{
 mod models{
     pub mod client;
     pub mod achievement;
-    pub mod ranking;
     pub mod friends;
+    pub mod dgs;
+    pub mod ranking;
 }
 mod controller{
     pub mod database_manager;
+    pub mod dgs;
     pub mod client;
     pub mod ranking;
     pub mod friends;

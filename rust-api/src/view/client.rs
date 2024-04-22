@@ -1,18 +1,15 @@
 use std::hash;
 use actix_web::{error, HttpResponse, Responder, web};
-
-
 use argon2::{Argon2, PasswordHash, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use jsonwebtoken::{EncodingKey, Header};
-
 use r2d2_postgres::{postgres, PostgresConnectionManager};
 use r2d2_postgres::postgres::fallible_iterator::FallibleIterator;
 //use crate::GLOBAL_CONNECTION;
 use crate::Claims;
 use crate::controller::client::{add_user, get_user_by_email, get_user_by_username};
-use crate::models::client::{DGS, Client, ClientAuth, InsertableClient};
+use crate::models::client::{Client, ClientAuth, InsertableClient};
 use crate::DbPool;
 
 
@@ -49,8 +46,8 @@ fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<Password
 fn generate_salt() -> SaltString {
     SaltString::generate(&mut OsRng)
 }
-fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
 
+fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
     let mut header = Header::new(jsonwebtoken::Algorithm::HS256);
     header.typ = Some("JWT".to_string());
 
@@ -123,7 +120,8 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
 
         add_user(&mut *conn, &*user.username, &*user.email, &*hash.hash.unwrap().to_string(), salt.as_ref())
     })
-        .await?;
+    .await?;
+
 
 
     let claims = Claims {
@@ -151,21 +149,16 @@ pub async fn get_user_by_username_email(user: web::Json<ClientAuth>) -> impl Res
 }
 
 #[actix_web::post("/dgs/add")]
-pub async fn add_dgs(server: web::Json<DGS>) -> impl Responder {
-
+pub async fn add_dgs() -> impl Responder {
+    // Here you can add the user to the database.
     // For now, let's just return the user data as JSON.
-    HttpResponse::Ok().body(format!("Add DGS: {}", server.label))
+    HttpResponse::Ok()
 }
 
 #[actix_web::get("/dgs/login")]
-pub async fn dgs_login(server: web::Json<DGS>) -> impl Responder {
+pub async fn dgs_login() -> impl Responder {
     // Here you can add the user to the database.
     // For now, let's just return the user data as JSON.
-    let claims = Claims {
-        iss: server.id.clone().to_string(),
-        sub: server.label.clone(),
-        iat: 0,
-        exp: 0,
-    };
-    HttpResponse::Ok().body(create_jwt(claims).unwrap())
+    
+    HttpResponse::Ok()
 }
