@@ -49,11 +49,11 @@ pub fn get_user_by_username(connection: &mut PgConnection, user_name: &str) -> C
         .expect("Error loading user")
 }
 
-pub fn get_user_by_email(connection: &mut PgConnection, email: &str) -> Client {
+pub fn get_user_by_email(connection: &mut PgConnection, _email: &str) -> Client {
     use crate::schema::client::dsl::*;
 
     client
-        .filter(email.eq(email))
+        .filter(email.eq(_email))
         .first(connection)
         .expect("Error loading user")
 }

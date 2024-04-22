@@ -1,5 +1,5 @@
 use diesel::{associations::Identifiable, deserialize::Queryable, Selectable};
-use serde::{Deserialize, Serialize};
+
 
 #[derive(Queryable, Selectable, Identifiable, PartialEq, Clone)]
 #[diesel(table_name = crate::schema::rank)]

@@ -4,9 +4,9 @@ use uuid::Uuid;
 use crate::{handle_jwt_token, DbPool};
 
 #[actix_web::post("/achievement/add")]
-pub async fn add_achievement(pool: web::Data<DbPool>, achievement: web::Json<String>) -> impl Responder {
+pub async fn add_achievement(_pool: web::Data<DbPool>, achievement: web::Json<String>) -> impl Responder {
     // Deserialize JSON to Achievement struct
-    let Achievement = achievement.into_inner();
+    let _Achievement = achievement.into_inner();
 
     // TODO add achievement to db
     // Get UUID from db

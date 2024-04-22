@@ -1,15 +1,15 @@
-use std::hash;
-use actix_web::{error, HttpResponse, Responder, web};
+
+use actix_web::{HttpResponse, Responder, web};
 use argon2::{Argon2, PasswordHash, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use jsonwebtoken::{EncodingKey, Header};
-use r2d2_postgres::{postgres, PostgresConnectionManager};
-use r2d2_postgres::postgres::fallible_iterator::FallibleIterator;
+
+
 //use crate::GLOBAL_CONNECTION;
 use crate::Claims;
 use crate::controller::client::{add_user, get_user_by_email, get_user_by_username};
-use crate::models::client::{Client, ClientAuth, InsertableClient};
+use crate::models::client::{Client, ClientAuth};
 use crate::DbPool;
 
 
@@ -80,10 +80,10 @@ pub async fn login(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> acti
         // So, it should be called within the `web::block` closure, as well.
         let mut conn = pool.get().expect("couldn't get db connection from pool");
 
-        let mut user: Client;
+        let user: Client;
 
 
-        if (!_user.username.is_empty()) {
+        if !_user.username.is_empty() {
             user = get_user_by_username(&mut *conn, &*_user.username);
         } else {
             user = get_user_by_email(&mut *conn, &*_user.email);
@@ -94,7 +94,7 @@ pub async fn login(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> acti
     let salt = &mut SaltString::from_b64(&*client.salt).unwrap();
     let hashed_password = hash_password(&*_user.password, salt).unwrap();
 
-    let argon2 = Argon2::default();
+    let _argon2 = Argon2::default();
 
     if hashed_password.hash.unwrap().to_string() == client.password {
         let claims = Claims {
