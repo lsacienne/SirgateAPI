@@ -4,14 +4,33 @@ use uuid::Uuid;
 use crate::{handle_jwt_token, DbPool};
 
 #[actix_web::post("/achievement/add")]
-pub async fn add_achievement(_pool: web::Data<DbPool>, achievement: web::Json<String>) -> impl Responder {
-    // Deserialize JSON to Achievement struct
-    let _Achievement = achievement.into_inner();
+pub async fn add_achievement(
+    req: HttpRequest,
+    pool: web::Data<DbPool>,
+    achievement: web::Json<String>
+) -> actix_web::Result<impl Responder> {
+    let claim = match handle_jwt_token(req) {
+        Ok(claim) => claim,
+        Err(err) => return Err(err)
+    };
+    let id: Uuid = match claim.extract_uuid() {
+        Ok(id) => id,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
 
-    // TODO add achievement to db
-    // Get UUID from db
+    let achievement_name = achievement.into_inner();
 
-    HttpResponse::Ok().body("Achievement Added")
+    let achievement = web::block(move || {
+        // Obtaining a connection from the pool is also a potentially blocking operation.
+        // So, it should be called within the `web::block` closure, as well.
+        let mut conn = pool
+            .get()
+            .expect("couldn't get db connection from pool");
+
+        crate::controller::achievement::add_achievement(&mut conn, id, &achievement_name)
+    }).await?;
+
+    Ok(HttpResponse::Ok().json(achievement))
 }
 
 #[actix_web::get("/achievement/getall")]
