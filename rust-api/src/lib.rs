@@ -7,6 +7,7 @@ pub mod view{
     pub mod client;
     pub mod achievement;
     pub mod ranking;
+    pub mod dgs;
 }
 pub mod models{
     pub mod client;
