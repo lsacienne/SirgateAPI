@@ -49,6 +49,16 @@ pub fn add_achievement(
     }
 }
 
+pub fn add_achievement_by_name(
+    connection: &mut PgConnection,
+    client_name: &str,
+    achievement_name: &str
+) -> Achievement {
+    let client_id = crate::controller::client::get_user_by_username(connection, client_name).id;
+
+    add_achievement(connection, client_id, achievement_name)
+}
+
 pub fn get_all_achievements(connection: &mut PgConnection, _client_id: uuid::Uuid) -> Vec<Achievement> {
     use crate::schema::client_achievement;
     use crate::schema::achievement;

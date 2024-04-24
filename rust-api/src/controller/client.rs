@@ -1,4 +1,4 @@
-use diesel::{query_dsl::methods::{LimitDsl, FilterDsl}, ExpressionMethods, PgConnection, RunQueryDsl};
+use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgConnection, QueryDsl, RunQueryDsl};
 use crate::models::client::{InsertableClient, Client};
 
 pub fn add_user<'a>(
@@ -65,4 +65,36 @@ pub fn get_user_by_email(connection: &mut PgConnection, _email: &str) -> Client 
         .filter(email.eq(_email))
         .first(connection)
         .expect("Error loading user")
+}
+
+pub fn does_user_exist(connection: &mut PgConnection, user_id: uuid::Uuid) -> bool {
+    use crate::schema::client::dsl::*;
+
+    let result = client
+        .filter(id.eq(user_id))
+        .first::<Client>(connection);
+
+    match result {
+        Ok(_) => true,
+        Err(_) => false
+    }
+}
+
+pub fn is_user_dgs(connection: &mut PgConnection, user_id: uuid::Uuid) -> bool {
+    use crate::schema::client;
+    use crate::schema::role;
+
+    let result = client::table
+        .inner_join(role::table.on(client::role_id.eq(role::role_id)))
+        .filter(
+            client::id.eq(user_id).and(role::role_name.eq("DGS"))
+        )
+        .select((client::id, role::role_name))
+        .first::<(uuid::Uuid, String)>(connection);
+        
+
+    match result {
+        Ok(_) => true,
+        Err(_) => false
+    }
 }

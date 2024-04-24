@@ -21,3 +21,9 @@ pub struct ClientAchievement {
     pub client_id: uuid::Uuid,
     pub achievement_id: uuid::Uuid
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ClientAchievementReq {
+    pub client_username: String,
+    pub achievement_name: String
+}
