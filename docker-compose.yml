@@ -13,14 +13,18 @@ services:
       - "5432:5432"
     networks:
       - postgres-network
+
   redis:
     image: redis:latest
-    command: ["sh", "/redis/launch.sh"]
+    #command: ["redis-cli", "SET ALL_DGS '{\"dgs_cluster\": \"ALL_DGS\",\"dgs\": [] }'"]
     volumes:
       - ./redis:/redis
+    ports:
+      - "6379:6379"
     networks:
       - redis-network
 
+    
   webapp:
     build: rust-api
     ports:
@@ -36,6 +40,7 @@ services:
 
 volumes:
   mydb-shootervolume:
+  redis-volume:
 
 networks:
   redis-network:

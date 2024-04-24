@@ -3,6 +3,7 @@ use actix_web::{HttpResponse, Responder, web};
 use argon2::{Argon2, PasswordHash, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
+use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header};
 
 
@@ -97,11 +98,13 @@ pub async fn login(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> acti
     let _argon2 = Argon2::default();
 
     if hashed_password.hash.unwrap().to_string() == client.password {
+        let now = Utc::now().timestamp();
+        let exp = now + 3600;
         let claims = Claims {
             iss: client.id.clone().to_string(),
-            sub: client.email.clone(),
-            iat: 0,
-            exp: 0,
+            sub: client.email.clone().to_string(),
+            iat:now,
+            exp: i64::MAX,
         };
          Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
     } else {
@@ -129,12 +132,13 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
     .await?;
 
 
-
+    let now = Utc::now().timestamp();
+    let exp = now + 3600;
     let claims = Claims {
         iss: client.id.clone().to_string(),
         sub: client.email.clone().to_string(),
-        iat: 0,
-        exp: 0,
+        iat:now,
+        exp: i64::MAX,
     };
     Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
 }
