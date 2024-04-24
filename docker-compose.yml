@@ -15,6 +15,9 @@ services:
       - postgres-network
   redis:
     image: redis:latest
+    command: ["sh", "/redis/launch.sh"]
+    volumes:
+      - ./redis:/redis
     networks:
       - redis-network
 
