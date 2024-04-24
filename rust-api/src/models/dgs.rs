@@ -3,10 +3,16 @@ use crate::models::client::CacheClient;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DedicatedGameServer {
-    pub name: String,
+    pub id: uuid::Uuid,
     pub ip: std::net::IpAddr,
     pub port: u16,
     pub players: Vec<CacheClient>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DedicatedGameServerRegister {
+    pub ip: std::net::IpAddr,
+    pub port: u16,
 }
 
 pub struct RatedDgs {

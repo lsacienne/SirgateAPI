@@ -16,7 +16,7 @@ pub fn register_dgs(mut connection: redis::Connection, dgs: DedicatedGameServer)
     let dgs_json = serde_json::to_string(&dgs).unwrap();
 
     // Add the DGS to the 'dgs' field of 'ALL_DGS'
-    let path = format!("$.dgs[{}]", dgs.name); // Assuming 'id' is a field of DedicatedGameServer
+    let path = format!("$.dgs[{}]", dgs.id); // Assuming 'id' is a field of DedicatedGameServer
     connection.json_set::<_, _, _, ()>("ALL_DGS", &path, &dgs_json).unwrap();
 
     dgs
