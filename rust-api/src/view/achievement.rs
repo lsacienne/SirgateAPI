@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use crate::{handle_jwt_token, models::achievement::ClientAchievementReq, DbPool};
 
+/// Should be called from DGS
 #[actix_web::post("/achievement/add")]
 pub async fn add_achievement(
     req: HttpRequest,

@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, Responder};
 
-use crate::{controller::{self, database_manager::establish_redis_connection}, models::{client::ClientAuth, friends::FriendAuth}, DbPool};
+use crate::{controller::{self, database_manager::establish_redis_connection}, DbPool};
 
 #[actix_web::get("/friends/getall")]
 pub async fn get_all_friends(req: HttpRequest,pool: web::Data<DbPool>) -> actix_web::Result<impl Responder> {
