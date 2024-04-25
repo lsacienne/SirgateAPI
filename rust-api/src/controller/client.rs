@@ -127,8 +127,10 @@ pub fn cache_client(connection: &mut PgConnection, mut redis_connection: redis::
 }
 
 pub fn is_client_cached(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> bool {
-    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
-    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS","$").unwrap();
+    let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
+    let client_list =client_list.get(0).unwrap();
+
     match client_list.iter().position(|client| client.id == user_id) {
         Some(_) => true,
         None => false
@@ -137,7 +139,9 @@ pub fn is_client_cached(mut redis_connection: redis::Connection, user_id: uuid::
 
 pub fn cache_client_in_game(redis_connection: &mut redis::Connection, user_id: uuid::Uuid, game_id: String) -> CacheClient {
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
-    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
+    let client_list =client_list.get(0).unwrap();
+
     let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
     let mut client = client_list.get(client_index).unwrap().clone();
     client.state = ClientState::InGame(game_id);
@@ -150,8 +154,8 @@ pub fn cache_client_in_game(redis_connection: &mut redis::Connection, user_id: u
 
 pub fn cache_client_online(redis_connection: &mut redis::Connection, user_id: uuid::Uuid) -> CacheClient {
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
-    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
-    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
+    let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
+    let client_list =client_list.get(0).unwrap();    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
     let mut client = client_list.get(client_index).unwrap().clone();
     client.state = ClientState::Online;
 
@@ -163,8 +167,8 @@ pub fn cache_client_online(redis_connection: &mut redis::Connection, user_id: uu
 
 pub fn uncache_client(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> CacheClient {
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
-    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
-    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
+    let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
+    let client_list =client_list.get(0).unwrap();    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
     let mut client = client_list.get(client_index).unwrap().clone();
     redis_connection.json_arr_pop::<_, _, String>("ALL_CLIENTS","$", client_index.try_into().unwrap()).unwrap();
     
