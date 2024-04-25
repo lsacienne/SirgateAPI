@@ -1,5 +1,6 @@
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgConnection, QueryDsl, RunQueryDsl};
-use crate::models::client::{InsertableClient, Client};
+use redis::JsonCommands;
+use crate::models::client::{CacheClient, CacheClientDGS, Client, ClientState, InsertableClient};
 
 pub fn add_user<'a>(
     connection: &mut PgConnection,
@@ -97,4 +98,67 @@ pub fn is_user_dgs(connection: &mut PgConnection, user_id: uuid::Uuid) -> bool {
         Ok(_) => true,
         Err(_) => false
     }
+}
+
+pub fn initialize_client_cache(mut connection: redis::Connection) -> () {
+    let client_array: Vec<CacheClientDGS> = vec![];
+    connection.json_set::<_, _, Vec<CacheClientDGS>, ()>("ALL_CLIENTS", "$", &client_array).unwrap()
+}
+
+pub fn cache_client(connection: &mut PgConnection, mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> CacheClient {
+    use crate::schema::client;
+    use crate::schema::rank;
+
+    let user_client: (uuid::Uuid, String, String) = client::table
+        .inner_join(rank::table.on(client::rank_id.eq(rank::id)))
+        .filter(client::id.eq(user_id))
+        .select((client::id, client::username, rank::rank_name))
+        .first(connection)
+        .expect("Error loading user");
+
+    let client_cache = CacheClient {
+        id: user_client.0,
+        username: user_client.1,
+        rank: user_client.2,
+        state: ClientState::Online
+    };
+    redis_connection.json_arr_append::<_, _, _, ()>("ALL_CLIENTS", "$", &client_cache).unwrap();
+    client_cache
+}
+
+pub fn cache_client_in_game(mut redis_connection: redis::Connection, user_id: uuid::Uuid, game_id: String) -> CacheClient {
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
+    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
+    let mut client = client_list.get(client_index).unwrap().clone();
+    client.state = ClientState::InGame(game_id);
+
+    let json_client = serde_json::to_string(&client).unwrap();
+    redis_connection.json_set::<_, _, String, ()>("ALL_CLIENTS",format!("$[{}]", client_index),&json_client ).unwrap();
+    
+    client
+}
+
+pub fn cache_client_online(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> CacheClient {
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
+    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
+    let mut client = client_list.get(client_index).unwrap().clone();
+    client.state = ClientState::Online;
+
+    let json_client = serde_json::to_string(&client).unwrap();
+    redis_connection.json_set::<_, _, String, ()>("ALL_CLIENTS",format!("$[{}]", client_index),&json_client ).unwrap();
+    
+    client
+}
+
+pub fn uncache_client(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> CacheClient {
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
+    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
+    let mut client = client_list.get(client_index).unwrap().clone();
+    redis_connection.json_arr_pop::<_, _, String>("ALL_CLIENTS","$", client_index.try_into().unwrap()).unwrap();
+    
+    client.state = ClientState::Disconnected;
+    client
 }
