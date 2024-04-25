@@ -1,7 +1,7 @@
-use actix_web::{error::BlockingError, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use uuid::Uuid;
 
-use crate::{controller::achievement, handle_jwt_token, models::achievement::ClientAchievementReq, DbPool};
+use crate::{handle_jwt_token, models::achievement::ClientAchievementReq, DbPool};
 
 #[actix_web::post("/achievement/add")]
 pub async fn add_achievement(
