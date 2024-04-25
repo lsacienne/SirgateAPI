@@ -1,5 +1,15 @@
 # ShooterAPIREST
 
+## Setup  project
+
+Everything is setup in the docker compose except for some environment variables that should be defined in the file `rust-api/.env` :
+
+```bash
+DATABASE_URL="postgresql://shooteradmin:ff@postgres:5432/ShooterDB" # Defined in the docker-compose
+REDIS_URL="redis://redis:6379" # Defined in the docker compose
+JWT_SECRET="???" # Name it the way you like
+```
+
 ## Endpoint list (postgresql)
 
 ### GET Endpoints
