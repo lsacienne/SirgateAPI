@@ -53,11 +53,15 @@ async fn main() -> std::io::Result<()> {
     };*/
 
     let con = controller::database_manager::establish_redis_connection();
-    match &con {
-        Ok(_) => println!("Connected to Redis"),
-        Err(err) => {println!("Failed to connect to Redis: {}", err) }
+    let mut con = match con {
+        Ok(connection) => {
+            println!("Connected to Redis");
+            connection
+        },
+        Err(err) => panic!("Failed to connect to Redis: {}", err)
     };
-    controller::dgs::setup_dgs_map(con.unwrap());
+    controller::dgs::setup_dgs_map(&mut con);
+    controller::client::initialize_client_cache(&mut con);
 
     let url =  env::var("DATABASE_URL").unwrap() ;
     let manager = ConnectionManager::<PgConnection>::new(url);

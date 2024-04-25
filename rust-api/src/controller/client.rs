@@ -100,7 +100,7 @@ pub fn is_user_dgs(connection: &mut PgConnection, user_id: uuid::Uuid) -> bool {
     }
 }
 
-pub fn initialize_client_cache(mut connection: redis::Connection) -> () {
+pub fn initialize_client_cache(connection: &mut redis::Connection) -> () {
     let client_array: Vec<CacheClientDGS> = vec![];
     connection.json_set::<_, _, Vec<CacheClientDGS>, ()>("ALL_CLIENTS", "$", &client_array).unwrap()
 }

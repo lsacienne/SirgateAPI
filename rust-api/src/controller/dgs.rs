@@ -3,7 +3,7 @@ use crate::models::dgs::{DedicatedGameServer, DgsCluster, RatedDgs};
 use redis::JsonCommands; // Add this line
 use serde_json;
 
-pub fn setup_dgs_map(mut connection: redis::Connection) -> () {
+pub fn setup_dgs_map(connection: &mut redis::Connection) -> () {
     let main_cluster = DgsCluster {
         name: "ALL_DGS".to_string(),
         dgs: vec![]
