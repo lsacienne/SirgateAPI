@@ -57,7 +57,7 @@ pub async fn add_player_to_dgs(
         crate::controller::client::get_user_by_username(&mut conn, player.into_inner().as_str())
     }).await?;
 
-    let cached_client = crate::models::client::CacheClient {
+    let cached_client = crate::models::client::CacheClientDGS {
         id: player_client.id,
         username: player_client.username,
         rank_id: player_client.rank_id

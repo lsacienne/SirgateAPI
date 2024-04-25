@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
-use crate::models::client::CacheClient;
+use crate::models::client::CacheClientDGS;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DedicatedGameServer {
     pub id: uuid::Uuid,
     pub ip: std::net::IpAddr,
     pub port: u16,
-    pub players: Vec<CacheClient>,
+    pub players: Vec<CacheClientDGS>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
