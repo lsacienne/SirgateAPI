@@ -1,4 +1,3 @@
-use std::fmt::format;
 use diesel::PgConnection;
 use jsonwebtoken::{DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
@@ -9,6 +8,7 @@ pub mod view{
     pub mod achievement;
     pub mod ranking;
     pub mod dgs;
+    pub mod friends;
 }
 pub mod models{
     pub mod client;
