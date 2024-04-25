@@ -1,6 +1,7 @@
 use diesel::{prelude::*, ExpressionMethods, PgConnection, RunQueryDsl};
+use redis::JsonCommands;
 use crate::models::friends::Friend;
-use crate::models::client::Client;
+use crate::models::client::{CacheClient, Client, ClientState};
 
 pub fn is_friendship_existing(
     connection: &mut PgConnection,
@@ -67,4 +68,31 @@ pub fn get_friends(connection: &mut PgConnection, client_id: uuid::Uuid) -> Vec<
 
     friends_client1.append(&mut friends_client2);
     friends_client1
+}
+
+pub fn check_friendship(
+    mut redis_connection: redis::Connection,
+    friend_clients: Vec<Client>
+) -> Vec<CacheClient> {
+
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
+    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+
+    let mut friends: Vec<CacheClient> = vec![];
+
+    for friend_client in friend_clients {
+        match client_list.iter().position(|client| client.id == friend_client.id) {
+            Some(index) => friends.push(client_list.get(index).unwrap().clone()),
+            None => friends.push(
+                CacheClient {
+                    id: friend_client.id,
+                    username: friend_client.username,
+                    rank: "unknown".to_string(),
+                    state: ClientState::Disconnected
+                }
+            )
+        };
+    }
+
+    friends
 }
