@@ -52,24 +52,23 @@ async fn main() -> std::io::Result<()> {
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
     };*/
 
-    println!("Launched server ...");
-    HttpServer::new(|| {
+    let con = controller::database_manager::establish_redis_connection();
+    match &con {
+        Ok(_) => println!("Connected to Redis"),
+        Err(err) => {println!("Failed to connect to Redis: {}", err) }
+    };
+    controller::dgs::setup_dgs_map(con.unwrap());
 
-        let url =  env::var("DATABASE_URL").unwrap() ;
-
-        let con = controller::database_manager::establish_redis_connection();
-        match &con {
-            Ok(_) => println!("Connected to Redis"),
-            Err(err) => {println!("Failed to connect to Redis: {}", err) }
-        };
-        controller::dgs::setup_dgs_map(con.unwrap());
-
-        let manager = ConnectionManager::<PgConnection>::new(url);
+    let url =  env::var("DATABASE_URL").unwrap() ;
+    let manager = ConnectionManager::<PgConnection>::new(url);
         let pool = r2d2::Pool::builder()
             .build(manager)
             .expect("database URL should be valid path to Postgres DB file");
+
+    println!("Launched server ...");
+    HttpServer::new(move || {
         App::new()
-            .app_data(actix_web::web::Data::new(pool))
+            .app_data(actix_web::web::Data::new(pool.clone()))
             .service(index)
             .service(rust_api::view::client::login)
             .service(rust_api::view::client::register)
@@ -80,7 +79,7 @@ async fn main() -> std::io::Result<()> {
             .service(rust_api::view::dgs::find_dgs)
             .service(rust_api::view::dgs::register_dgs)
     })
-        .bind("0.0.0.0:8080")?
-        .run()
-        .await
+    .bind("0.0.0.0:8080")?
+    .run()
+    .await
 }
