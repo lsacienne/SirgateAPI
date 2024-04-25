@@ -143,3 +143,25 @@ pub async fn find_dgs(
     
     Ok(HttpResponse::Ok().json(res))
 }
+
+#[actix_web::get("/dgs/players")]
+pub async fn get_clients_in_dgs(
+    req: HttpRequest
+) -> actix_web::Result<impl Responder> {
+    let claim = match handle_jwt_token(req) {
+        Ok(claim) => claim,
+        Err(err) => return Err(err)
+    };
+    let id: Uuid = match claim.extract_uuid() {
+        Ok(id) => id,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+
+    let con = match establish_redis_connection() {
+        Ok(con) => con,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+    let res = crate::controller::dgs::get_players_in_dgs(con, &*id.to_string());
+    
+    Ok(HttpResponse::Ok().json(res))
+}
