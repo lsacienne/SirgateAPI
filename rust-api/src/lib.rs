@@ -1,3 +1,4 @@
+use std::fmt::format;
 use diesel::PgConnection;
 use jsonwebtoken::{DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
@@ -55,7 +56,22 @@ pub fn handle_jwt_token(req: actix_web::HttpRequest) -> Result<Claims, actix_web
         .to_str()
         .map_err(|_| actix_web::error::ErrorBadRequest("Invalid Authorization header"))?;
     
-    jsonwebtoken::decode::<Claims>(&token, &DecodingKey::from_base64_secret(&secret).unwrap(), &Validation::default())
-        .map(|data| data.claims)
-        .map_err(|_| actix_web::error::ErrorUnauthorized("Invalid token"))
+    let decoding_key = match DecodingKey::from_base64_secret(&secret) {
+    Ok(key) => key,
+    Err(_) => return Err(actix_web::error::ErrorInternalServerError("Invalid base64 secret")),
+};
+
+    let token = token.replace("Bearer ", "");
+    jsonwebtoken::decode::<Claims>(&token, &decoding_key, &Validation::default())
+    .map(|data| data.claims)
+    .map_err(|err| {
+        match err.kind() {
+            jsonwebtoken::errors::ErrorKind::InvalidToken => actix_web::error::ErrorUnauthorized("Invalid token"),
+            jsonwebtoken::errors::ErrorKind::InvalidSignature => actix_web::error::ErrorUnauthorized("Invalid signature"),
+            // print the error to the console
+            _ => {
+                actix_web::error::ErrorInternalServerError(format!("JWT validation failed: {}", err))
+            },
+        }
+    })
 }

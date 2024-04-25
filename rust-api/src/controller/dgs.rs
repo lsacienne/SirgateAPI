@@ -1,15 +1,19 @@
 use crate::models::client::CacheClient;
 use crate::models::dgs::{DedicatedGameServer, DgsCluster, RatedDgs};
 use redis::JsonCommands; // Add this line
-use serde_json::{self};
+use serde_json::{self, json};
 
 pub fn setup_dgs_map(mut connection: redis::Connection) -> () {
     let main_cluster = DgsCluster {
         name: "ALL_DGS".to_string(),
         dgs: vec![]
     };
-    connection.json_set::<_, _, DgsCluster, ()>(&main_cluster.name, "$", &main_cluster).unwrap()
-}
+    let main_cluster_json = json!(main_cluster).to_string();
+    let _: () = redis::cmd("SET")
+        .arg(&main_cluster.name)
+        .arg(main_cluster_json)
+        .query(&mut connection)
+        .unwrap();}
 
 pub fn register_dgs(mut connection: redis::Connection, dgs: DedicatedGameServer) -> DedicatedGameServer {
     // Convert the DGS to a JSON string
@@ -17,7 +21,11 @@ pub fn register_dgs(mut connection: redis::Connection, dgs: DedicatedGameServer)
 
     // Add the DGS to the 'dgs' field of 'ALL_DGS'
     let path = format!("$.dgs[{}]", dgs.id); // Assuming 'id' is a field of DedicatedGameServer
-    connection.json_set::<_, _, _, ()>("ALL_DGS", &path, &dgs_json).unwrap();
+    let _: () = redis::cmd("SET")
+        .arg(&path)
+        .arg(&dgs_json)
+        .query(&mut connection)
+        .unwrap();
 
     dgs
 }
