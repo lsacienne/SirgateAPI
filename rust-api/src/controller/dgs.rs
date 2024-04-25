@@ -1,7 +1,7 @@
-use crate::models::client::CacheClient;
+use crate::models::client::CacheClientDGS;
 use crate::models::dgs::{DedicatedGameServer, DgsCluster, RatedDgs};
 use redis::JsonCommands; // Add this line
-use serde_json::{self, json};
+use serde_json;
 
 pub fn setup_dgs_map(mut connection: redis::Connection) -> () {
     let main_cluster = DgsCluster {
@@ -22,7 +22,7 @@ pub fn register_dgs(mut connection: redis::Connection, dgs: DedicatedGameServer)
     dgs
 }
 
-pub fn add_player_to_dgs(mut connection: redis::Connection, dgs_id: &str, player: CacheClient) -> DedicatedGameServer {
+pub fn add_player_to_dgs(mut connection: redis::Connection, dgs_id: &str, player: CacheClientDGS) -> DedicatedGameServer {
     let path = "$.dgs";
 
     let string_dgs = match connection.json_get::<_, &str, String>("ALL_DGS", &path) {
