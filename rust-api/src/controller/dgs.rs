@@ -8,41 +8,36 @@ pub fn setup_dgs_map(mut connection: redis::Connection) -> () {
         name: "ALL_DGS".to_string(),
         dgs: vec![]
     };
-    let main_cluster_json = json!(main_cluster).to_string();
-    let _: () = redis::cmd("SET")
-        .arg(&main_cluster.name)
-        .arg(main_cluster_json)
-        .query(&mut connection)
-        .unwrap();}
+    connection.json_set::<_, _, DgsCluster, ()>(&main_cluster.name, "$", &main_cluster).unwrap()    
+}
 
 pub fn register_dgs(mut connection: redis::Connection, dgs: DedicatedGameServer) -> DedicatedGameServer {
     // Convert the DGS to a JSON string
     let dgs_json = serde_json::to_string(&dgs).unwrap();
 
     // Add the DGS to the 'dgs' field of 'ALL_DGS'
-    let path = format!("$.dgs[{}]", dgs.id); // Assuming 'id' is a field of DedicatedGameServer
-    let _: () = redis::cmd("SET")
-        .arg(&path)
-        .arg(&dgs_json)
-        .query(&mut connection)
-        .unwrap();
+    let path = "$.dgs"; // Assuming 'id' is a field of DedicatedGameServer
+    connection.json_arr_append::<_, _, _, ()>("ALL_DGS", &path, &dgs_json).unwrap();
 
     dgs
 }
 
-pub fn add_player_to_dgs(mut connection: redis::Connection, dgs_name: &str, player: CacheClient) -> DedicatedGameServer {
-    let path = format!("$.dgs[{}]", dgs_name);
+pub fn add_player_to_dgs(mut connection: redis::Connection, dgs_id: &str, player: CacheClient) -> DedicatedGameServer {
+    let path = "$.dgs";
 
     let string_dgs = match connection.json_get::<_, &str, String>("ALL_DGS", &path) {
         Ok(dgs) => dgs,
         Err(_) => "".to_string()
     };
 
-    let mut dgs: DedicatedGameServer = serde_json::from_str(&string_dgs).unwrap();
-    dgs.players.push(player);
+    let dgs_list: Vec<DedicatedGameServer> = serde_json::from_str(&string_dgs).unwrap();
+    let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id).unwrap();
+    let mut targeted_dgs = dgs_list.get(dgs_index).unwrap().clone();
+    targeted_dgs.players.push(player);
+    let set_path = format!("$.dgs[{}]", dgs_index);
     
-    connection.json_set::<_, _, String, ()>("ALL_DGS", path, &serde_json::to_string(&dgs).unwrap()).unwrap();
-    dgs
+    connection.json_set::<_, _, String, ()>("ALL_DGS", set_path, &serde_json::to_string(&targeted_dgs).unwrap()).unwrap();
+    targeted_dgs
 }
 
 pub fn find_dgs_by_rank(mut connection: redis::Connection, rank: i32) -> DedicatedGameServer {

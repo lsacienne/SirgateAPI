@@ -15,7 +15,7 @@ services:
       - postgres-network
 
   redis:
-    image: redis:latest
+    image: redis/redis-stack:latest
     #command: ["redis-cli", "SET ALL_DGS '{\"dgs_cluster\": \"ALL_DGS\",\"dgs\": [] }'"]
     volumes:
       - ./redis:/redis
