@@ -49,8 +49,5 @@ pub async fn update_rank(
     })
     .await?;
 
-    // TODO update rank in db
-    // Get UUID from db
-
-    Ok(HttpResponse::Ok().body(format!("Rank Updated client {}", client_updated.username)))
+    Ok(HttpResponse::Ok().body(format!("Rank Updated on client {}", client_updated.username)))
 }
