@@ -7,9 +7,10 @@ use chrono::Utc;
 use jsonwebtoken::{EncodingKey, Header};
 
 
+use crate::controller::database_manager::establish_redis_connection;
 //use crate::GLOBAL_CONNECTION;
 use crate::Claims;
-use crate::controller::client::{add_user, get_user_by_email, get_user_by_username};
+use crate::controller::client::{add_user, cache_client, get_user_by_email, get_user_by_username, is_client_cached};
 use crate::models::client::{Client, ClientAuth};
 use crate::DbPool;
 
@@ -76,6 +77,7 @@ pub async fn login(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> acti
     if _user.email.is_empty() && _user.username.is_empty() {
          return Ok(HttpResponse::BadRequest().body("Email or username is empty"));
     }
+    let pool_clone = pool.clone();
     let client = web::block(move || {
         // Obtaining a connection from the pool is also a potentially blocking operation.
         // So, it should be called within the `web::block` closure, as well.
@@ -106,6 +108,24 @@ pub async fn login(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> acti
             iat:now,
             exp: i64::MAX,
         };
+        
+        let con = match establish_redis_connection() {
+            Ok(con) => con,
+            Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+        };
+
+        if !is_client_cached(con, client.id) {
+            web::block(move || {
+                let redis_con = establish_redis_connection()
+                    .expect("couldn't get redis connection");
+
+                let mut conn = pool_clone
+                    .get()
+                    .expect("couldn't get db connection from pool");
+                cache_client(&mut conn, redis_con, client.id);
+            }).await?;
+            
+        }
          Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
     } else {
          Ok(HttpResponse::BadRequest().body("Invalid password"))
@@ -116,7 +136,7 @@ pub async fn login(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> acti
 pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> actix_web::Result<impl Responder> {
     let user: ClientAuth = user.into_inner();
 
-
+    let pool_clone = pool.clone();
     let client = web::block(move || {
         // Obtaining a connection from the pool is also a potentially blocking operation.
         // So, it should be called within the `web::block` closure, as well.
@@ -140,6 +160,17 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
         iat:now,
         exp: i64::MAX,
     };
+
+    web::block(move || {
+        let redis_con = establish_redis_connection()
+            .expect("couldn't get redis connection");
+
+        let mut conn = pool_clone
+            .get()
+            .expect("couldn't get db connection from pool");
+        cache_client(&mut conn, redis_con, client.id);
+    }).await?;
+
     Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
 }
 
@@ -156,19 +187,4 @@ pub async fn get_user_by_username_email(user: web::Json<ClientAuth>) -> impl Res
     let user: ClientAuth = user.into_inner();
 
     user.username.to_owned() + " " + &user.email + " " + &user.password
-}
-
-#[actix_web::post("/dgs/add")]
-pub async fn add_dgs() -> impl Responder {
-    // Here you can add the user to the database.
-    // For now, let's just return the user data as JSON.
-    HttpResponse::Ok()
-}
-
-#[actix_web::get("/dgs/login")]
-pub async fn dgs_login() -> impl Responder {
-    // Here you can add the user to the database.
-    // For now, let's just return the user data as JSON.
-    
-    HttpResponse::Ok()
 }

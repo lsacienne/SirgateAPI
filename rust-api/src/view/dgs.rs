@@ -76,8 +76,44 @@ pub async fn add_player_to_dgs(
     ))
 }
 
+#[actix_web::delete("/dgs/removeplayer")]
+pub async fn remove_player_from_dgs(
+    req: HttpRequest,
+    pool: web::Data<DbPool>,
+    player: web::Path<String>
+) -> actix_web::Result<impl Responder> {
+    let claim = match handle_jwt_token(req) {
+        Ok(claim) => claim,
+        Err(err) => return Err(err)
+    };
+    let id: Uuid = match claim.extract_uuid() {
+        Ok(id) => id,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+
+    let player_client = web::block(move || {
+        // Obtaining a connection from the pool is also a potentially blocking operation.
+        // So, it should be called within the `web::block` closure, as well.
+        let mut conn = pool.get().expect("couldn't get db connection from pool");
+
+        crate::controller::client::get_user_by_username(&mut conn, player.into_inner().as_str())
+    }).await?;
+
+    let con = match establish_redis_connection() {
+        Ok(con) => con,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+    let res = crate::controller::dgs::remove_player_from_dgs(con, &*id.to_string(), player_client.id);
+    
+    Ok(HttpResponse::Ok().body(
+        format!("Remove player {} from DGS: {}",
+        player_client.username,
+        res.id)
+    ))
+}
+
 /// Should be called from player client
-#[actix_web::post("/client/finddgs")]
+#[actix_web::get("/client/finddgs")]
 pub async fn find_dgs(
     req: HttpRequest,
     pool: web::Data<DbPool>,

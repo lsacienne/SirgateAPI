@@ -33,10 +33,33 @@ pub fn add_player_to_dgs(mut connection: redis::Connection, dgs_id: &str, player
     let dgs_list: Vec<DedicatedGameServer> = serde_json::from_str(&string_dgs).unwrap();
     let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id).unwrap();
     let mut targeted_dgs = dgs_list.get(dgs_index).unwrap().clone();
-    targeted_dgs.players.push(player);
+    targeted_dgs.players.push(player.clone());
     let set_path = format!("$.dgs[{}]", dgs_index);
+
+    crate::controller::client::cache_client_in_game(&mut connection, player.id, targeted_dgs.id.to_string());
     
     connection.json_set::<_, _, String, ()>("ALL_DGS", set_path, &serde_json::to_string(&targeted_dgs).unwrap()).unwrap();
+    targeted_dgs
+}
+
+pub fn remove_player_from_dgs(mut connection: redis::Connection, dgs_id: &str, player_id: uuid::Uuid) -> DedicatedGameServer {
+    let path = "$.dgs";
+
+    let string_dgs = match connection.json_get::<_, &str, String>("ALL_DGS", &path) {
+        Ok(dgs) => dgs,
+        Err(_) => "".to_string()
+    };
+
+    let dgs_list: Vec<DedicatedGameServer> = serde_json::from_str(&string_dgs).unwrap();
+    let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id).unwrap();
+    let mut targeted_dgs = dgs_list.get(dgs_index).unwrap().clone();
+    let player_index = targeted_dgs.players.iter().position(|p| p.id == player_id).unwrap();
+    targeted_dgs.players.remove(player_index);
+    let pop_path = format!("$.dgs[{}].players", dgs_index);
+
+    crate::controller::client::cache_client_online(&mut connection, player_id);
+    
+    connection.json_arr_pop::<_, _, String>("ALL_DGS", pop_path, player_index.try_into().unwrap()).unwrap();
     targeted_dgs
 }
 
