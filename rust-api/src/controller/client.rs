@@ -126,7 +126,16 @@ pub fn cache_client(connection: &mut PgConnection, mut redis_connection: redis::
     client_cache
 }
 
-pub fn cache_client_in_game(mut redis_connection: redis::Connection, user_id: uuid::Uuid, game_id: String) -> CacheClient {
+pub fn is_client_cached(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> bool {
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
+    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    match client_list.iter().position(|client| client.id == user_id) {
+        Some(_) => true,
+        None => false
+    }
+}
+
+pub fn cache_client_in_game(redis_connection: &mut redis::Connection, user_id: uuid::Uuid, game_id: String) -> CacheClient {
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
     let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
     let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
@@ -139,7 +148,7 @@ pub fn cache_client_in_game(mut redis_connection: redis::Connection, user_id: uu
     client
 }
 
-pub fn cache_client_online(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> CacheClient {
+pub fn cache_client_online(redis_connection: &mut redis::Connection, user_id: uuid::Uuid) -> CacheClient {
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
     let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
     let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
