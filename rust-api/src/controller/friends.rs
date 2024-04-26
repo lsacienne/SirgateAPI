@@ -76,7 +76,9 @@ pub fn check_friendship(
 ) -> Vec<CacheClient> {
 
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
-    let client_list = serde_json::from_str::<Vec<CacheClient>>(&client_list_string).unwrap();
+    let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
+    let client_list = client_list.get(0).unwrap().clone();
+
 
     let mut friends: Vec<CacheClient> = vec![];
 

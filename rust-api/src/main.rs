@@ -87,6 +87,7 @@ async fn main() -> std::io::Result<()> {
             .service(rust_api::view::ranking::update_rank)
             .service(rust_api::view::achievement::add_achievement)
             .service(rust_api::view::achievement::get_all_achievements)
+            .service(rust_api::view::dgs::get_clients_in_dgs)
     })
     .bind("0.0.0.0:8080")?
     .run()

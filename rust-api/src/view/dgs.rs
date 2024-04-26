@@ -113,7 +113,7 @@ pub async fn remove_player_from_dgs(
 }
 
 /// Should be called from player client
-#[actix_web::get("/client/finddgs")]
+    #[actix_web::get("/client/finddgs")]
 pub async fn find_dgs(
     req: HttpRequest,
     pool: web::Data<DbPool>,
