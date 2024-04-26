@@ -1,5 +1,5 @@
 
-use actix_web::{HttpResponse, Responder, web};
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use argon2::{Argon2, PasswordHash, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
@@ -9,7 +9,7 @@ use jsonwebtoken::{EncodingKey, Header};
 
 use crate::controller::database_manager::establish_redis_connection;
 //use crate::GLOBAL_CONNECTION;
-use crate::Claims;
+use crate::{handle_jwt_token, Claims};
 use crate::controller::client::{add_user, cache_client, get_user_by_email, get_user_by_username, is_client_cached};
 use crate::models::client::{Client, ClientAuth};
 use crate::DbPool;
@@ -174,11 +174,24 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
     Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
 }
 
-#[actix_web::get("/users")]
-pub async fn get_users() -> impl Responder {
-    // Here you can add the user to the database.
-    // For now, let's just return the user data as JSON.
-    " Get All Users you scumbag !"
+#[actix_web::delete("/logout")]
+pub async fn logout(req: HttpRequest) -> actix_web::Result<impl Responder> {
+    let claim = match handle_jwt_token(req) {
+        Ok(claim) => claim,
+        Err(err) => return Err(err)
+    };
+    let id: uuid::Uuid = match claim.extract_uuid() {
+        Ok(id) => id,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+
+    let con = match establish_redis_connection() {
+        Ok(con) => con,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+    let res = crate::controller::client::uncache_client(con, id);
+
+    Ok(HttpResponse::Ok().json(res))
 }
 
 #[actix_web::get("/singleuser")]

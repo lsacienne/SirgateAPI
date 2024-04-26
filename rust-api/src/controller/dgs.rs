@@ -93,7 +93,7 @@ pub fn find_dgs_by_rank(mut connection: redis::Connection, rank: i32) -> Dedicat
     dgs_list.first().unwrap().dgs.clone()
 }
 
-pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Vec<CacheClientDGS> {
+pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Option<Vec<CacheClientDGS>> {
     let path = "$.dgs";
 
     let string_dgs = match connection.json_get::<_, &str, String>("ALL_DGS", &path) {
@@ -103,7 +103,13 @@ pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Ve
 
     let dgs_list: Vec<Vec<DedicatedGameServer>> = serde_json::from_str(&string_dgs).unwrap();
     let dgs_list = dgs_list.get(0).unwrap().clone();
-    let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id).unwrap();
-    let targeted_dgs = dgs_list.get(dgs_index).unwrap().clone();
-    targeted_dgs.players
+    let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id);
+    match dgs_index {
+        None => None,
+        Some(index) => {
+            let targeted_dgs = dgs_list.get(index).unwrap().clone();
+            Some(targeted_dgs.players)
+        }
+    }
+    
 }

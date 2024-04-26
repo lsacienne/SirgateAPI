@@ -76,7 +76,6 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(rust_api::view::client::login)
             .service(rust_api::view::client::register)
-            .service(rust_api::view::client::get_users)
             .service(rust_api::view::client::get_user_by_username_email)
             .service(rust_api::view::dgs::find_dgs)
             .service(rust_api::view::dgs::register_dgs)
