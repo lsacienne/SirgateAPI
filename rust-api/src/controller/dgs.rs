@@ -1,4 +1,4 @@
-use crate::models::client::CacheClientDGS;
+use crate::models::client::{CacheClient, CacheClientDGS};
 use crate::models::dgs::{DedicatedGameServer, DgsCluster, RatedDgs};
 use redis::JsonCommands; // Add this line
 use serde_json;
@@ -86,4 +86,18 @@ pub fn find_dgs_by_rank(mut connection: redis::Connection, rank: i32) -> Dedicat
     dgs_list.sort_by(|a, b| a.rating.partial_cmp(&b.rating).unwrap());
 
     dgs_list.first().unwrap().dgs.clone()
+}
+
+pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Vec<CacheClientDGS> {
+    let path = "$.dgs";
+
+    let string_dgs = match connection.json_get::<_, &str, String>("ALL_DGS", &path) {
+        Ok(dgs) => dgs,
+        Err(_) => "".to_string()
+    };
+
+    let dgs_list: Vec<DedicatedGameServer> = serde_json::from_str(&string_dgs).unwrap();
+    let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id).unwrap();
+    let targeted_dgs = dgs_list.get(dgs_index).unwrap().clone();
+    targeted_dgs.players
 }
