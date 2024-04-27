@@ -6,8 +6,13 @@ use crate::{controller::database_manager::establish_redis_connection, handle_jwt
 #[actix_web::post("/dgs/register")]
 pub async fn register_dgs(
     req: HttpRequest,
-    dgs: web::Json<DedicatedGameServerRegister>
+    dgs_port: web::Json<u16>
 ) -> actix_web::Result<impl Responder> {
+    
+    let sending_socket = match req.peer_addr() {
+        Some(socket) => socket,
+        None => return Err(actix_web::error::ErrorInternalServerError("Couldn't get socket"))
+    };
     let claim = match handle_jwt_token(req) {
         Ok(claim) => claim,
         Err(err) => return Err(err)
@@ -17,7 +22,13 @@ pub async fn register_dgs(
         Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
     };
     
-    let request_dgs = dgs.into_inner();
+
+    let request_dgs = DedicatedGameServerRegister {
+        ip: sending_socket.ip(),
+        port: dgs_port.into_inner()
+    };
+    println!("Registering DGS {} at {}:{}", id, request_dgs.ip, request_dgs.port);
+
     let dgs = DedicatedGameServer {
         id,
         ip: request_dgs.ip,
