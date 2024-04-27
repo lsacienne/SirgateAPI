@@ -101,9 +101,10 @@ pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Op
         Err(_) => "".to_string()
     };
 
-    let dgs_list: Vec<Vec<DedicatedGameServer>> = serde_json::from_str(&string_dgs).unwrap();
+    let dgs_list: Vec<Vec<String>> = serde_json::from_str(&string_dgs).unwrap();
     let dgs_list = dgs_list.get(0).unwrap().clone();
-    let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id);
+    let dgs_list = dgs_list.iter().map(|dgs| serde_json::from_str::<DedicatedGameServer>(dgs).unwrap()).collect::<Vec<DedicatedGameServer>>();
+    let dgs_index = dgs_list.iter().position(|dgs | dgs.id.to_string() == dgs_id);
     match dgs_index {
         None => None,
         Some(index) => {
