@@ -49,7 +49,7 @@ pub async fn register_dgs(
 pub async fn add_player_to_dgs(
     req: HttpRequest,
     pool: web::Data<DbPool>,
-    player: web::Path<String>
+    player: web::Json<String>
 ) -> actix_web::Result<impl Responder> {
     let claim = match handle_jwt_token(req) {
         Ok(claim) => claim,
