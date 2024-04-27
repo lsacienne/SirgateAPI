@@ -13,12 +13,10 @@ pub fn setup_dgs_map(connection: &mut redis::Connection) -> () {
 }
 
 pub fn register_dgs(mut connection: redis::Connection, dgs: DedicatedGameServer) -> DedicatedGameServer {
-    // Convert the DGS to a JSON string
-    let dgs_json = serde_json::to_string(&dgs).unwrap();
 
     // Add the DGS to the 'dgs' field of 'ALL_DGS'
     let path = "$.dgs"; // Assuming 'id' is a field of DedicatedGameServer
-    connection.json_arr_append::<_, _, _, ()>("ALL_DGS", &path, &dgs_json).unwrap();
+    connection.json_arr_append::<_, _, DedicatedGameServer, ()>("ALL_DGS", &path, &dgs).unwrap();
 
     dgs
 }
@@ -40,7 +38,7 @@ pub fn add_player_to_dgs(mut connection: redis::Connection, dgs_id: &str, player
 
     crate::controller::client::cache_client_in_game(&mut connection, player.id, targeted_dgs.id.to_string());
 
-    connection.json_set::<_, _, String, ()>("ALL_DGS", set_path, &serde_json::to_string(&targeted_dgs).unwrap()).unwrap();
+    connection.json_set::<_, _, DedicatedGameServer, ()>("ALL_DGS", set_path, &targeted_dgs).unwrap();
     targeted_dgs
 }
 

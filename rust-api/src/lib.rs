@@ -75,3 +75,7 @@ pub fn handle_jwt_token(req: actix_web::HttpRequest) -> Result<Claims, actix_web
         }
     })
 }
+
+pub fn unescape(s: &str) -> serde_json::Result<String> {
+    serde_json::from_str(&format!("\"{}\"", s))
+}

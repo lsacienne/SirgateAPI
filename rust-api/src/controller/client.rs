@@ -1,6 +1,7 @@
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgConnection, QueryDsl, RunQueryDsl};
 use redis::JsonCommands;
 use crate::models::client::{CacheClient, CacheClientDGS, Client, ClientState, InsertableClient};
+use crate::unescape;
 
 pub fn add_user<'a>(
     connection: &mut PgConnection,
@@ -146,8 +147,7 @@ pub fn cache_client_in_game(redis_connection: &mut redis::Connection, user_id: u
     let mut client = client_list.get(client_index).unwrap().clone();
     client.state = ClientState::InGame(game_id);
 
-    let json_client = serde_json::to_string(&client).unwrap();
-    redis_connection.json_set::<_, _, String, ()>("ALL_CLIENTS",format!("$[{}]", client_index),&json_client ).unwrap();
+    redis_connection.json_set::<_, _, CacheClient, ()>("ALL_CLIENTS",format!("$[{}]", client_index),&client ).unwrap();
     
     client
 }
@@ -159,8 +159,7 @@ pub fn cache_client_online(redis_connection: &mut redis::Connection, user_id: uu
     let mut client = client_list.get(client_index).unwrap().clone();
     client.state = ClientState::Online;
 
-    let json_client = serde_json::to_string(&client).unwrap();
-    redis_connection.json_set::<_, _, String, ()>("ALL_CLIENTS",format!("$[{}]", client_index),&json_client ).unwrap();
+    redis_connection.json_set::<_, _, CacheClient, ()>("ALL_CLIENTS",format!("$[{}]", client_index),&client ).unwrap();
     
     client
 }
