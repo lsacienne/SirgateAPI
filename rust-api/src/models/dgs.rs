@@ -1,3 +1,4 @@
+use diesel::Insertable;
 use serde::{Deserialize, Serialize};
 use crate::models::client::CacheClientDGS;
 
@@ -24,4 +25,15 @@ pub struct RatedDgs {
 pub struct DgsCluster {
     pub name: String,
     pub dgs: Vec<DedicatedGameServer>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::client)]
+pub struct InsertableDGS<'a> {
+    pub username: &'a str,
+    pub email: &'a str,
+    pub password: &'a str,
+    pub salt: &'a str,
+    pub rank_id: i32
+
 }

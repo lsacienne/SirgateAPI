@@ -1,5 +1,6 @@
-use crate::models::client::{CacheClient, CacheClientDGS};
-use crate::models::dgs::{DedicatedGameServer, DgsCluster, RatedDgs};
+use diesel::{PgConnection, RunQueryDsl};
+use crate::models::client::{CacheClient, CacheClientDGS, Client, InsertableClient};
+use crate::models::dgs::{DedicatedGameServer, DgsCluster, InsertableDGS, RatedDgs};
 use redis::{cmd, JsonCommands};
 // Add this line
 use serde_json;
@@ -114,4 +115,27 @@ pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Op
         }
     }
     
+}
+
+pub fn add_dgs<'a>(
+    connection: &mut PgConnection,
+    username: &'a str,
+    email: &'a str,
+    password_hash: &'a str,
+    salt: &'a str,
+) -> Client {
+    use crate::schema::client;
+
+    let new_dgs = InsertableDGS {
+        username,
+        email,
+        password: password_hash,
+        salt,
+        rank_id: 2
+    };
+
+    diesel::insert_into(client::table)
+        .values(&new_dgs)
+        .get_result(connection)
+        .expect("Error saving new user")
 }

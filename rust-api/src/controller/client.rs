@@ -1,4 +1,5 @@
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::result::Error;
 use redis::{cmd, JsonCommands};
 use crate::models::client::{CacheClient, CacheClientDGS, Client, ClientState, InsertableClient};
 use crate::unescape;
@@ -48,6 +49,12 @@ pub fn get_user_by_username(connection: &mut PgConnection, user_name: &str) -> C
         .filter(username.eq(user_name))
         .first(connection)
         .expect("Error loading user")
+}
+pub fn get_user_by_username_non_blocking(connection: &mut PgConnection, user_name: &str) -> Result<Client,Error> {
+    use crate::schema::client::dsl::*;
+    client
+        .filter(username.eq(user_name))
+        .first(connection)
 }
 
 pub fn get_user_by_id(connection: &mut PgConnection, user_id: uuid::Uuid) -> Client {
@@ -152,6 +159,17 @@ pub fn is_client_cached(mut redis_connection: redis::Connection, user_id: uuid::
     match client_list.iter().position(|client| client.id == user_id) {
         Some(_) => true,
         None => false
+    }
+}
+
+pub fn get_cached_client(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> Option<CacheClient> {
+    let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS","$").unwrap();
+    let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
+    let client_list =client_list.get(0).unwrap();
+
+    match client_list.iter().find(|client| client.id == user_id) {
+        Some(client) => Some(client.clone()),
+        None => None
     }
 }
 

@@ -35,7 +35,7 @@ pub async fn add_user(user: web::Json<models::user>) -> impl Responder {
         - Add DGS to database
  */
 
-fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<PasswordHash<'a>, argon2::password_hash::Error> {
+pub(crate) fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<PasswordHash<'a>, argon2::password_hash::Error> {
     let argon2 = Argon2::default();
 
     let salt_clone = salt.as_salt().to_owned();
@@ -45,11 +45,11 @@ fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<Password
     Ok(password_hash)
 }
 
-fn generate_salt() -> SaltString {
+pub(crate) fn generate_salt() -> SaltString {
     SaltString::generate(&mut OsRng)
 }
 
-fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
+pub(crate) fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
     dotenv::dotenv().ok();
     let secret = match dotenv::var("JWT_SECRET") {
         Ok(secret) => secret,
