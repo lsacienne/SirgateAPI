@@ -1,6 +1,6 @@
 use crate::models::client::{CacheClient, CacheClientDGS};
 use crate::models::dgs::{DedicatedGameServer, DgsCluster, RatedDgs};
-use redis::JsonCommands;
+use redis::{cmd, JsonCommands};
 // Add this line
 use serde_json;
 
@@ -57,10 +57,15 @@ pub fn remove_player_from_dgs(mut connection: redis::Connection, dgs_id: &str, p
     let player_index = targeted_dgs.players.iter().position(|p| p.id == player_id).unwrap();
     targeted_dgs.players.remove(player_index);
     let pop_path = format!("$.dgs[{}].players", dgs_index);
+    println!("Pop path: {}, player index: {}", pop_path, player_index);
 
     crate::controller::client::cache_client_online(&mut connection, player_id);
 
-    connection.json_arr_pop::<_, _, String>("ALL_DGS", pop_path, player_index.try_into().unwrap()).unwrap();
+    let mut cmd = cmd("JSON.ARRPOP");
+    cmd.arg("ALL_DGS").arg(pop_path).arg(player_index as i64);
+
+    let _: () = cmd.query(&mut connection).unwrap();
+    //connection.json_arr_pop::<_, _, String>("ALL_DGS", pop_path, player_index.try_into().unwrap()).unwrap();
     targeted_dgs
 }
 
@@ -69,10 +74,9 @@ pub fn find_dgs_by_rank(mut connection: redis::Connection, rank: i32) -> Dedicat
     let mut dgs_list: Vec<RatedDgs> = vec![];
 
     let dgs_list_string = connection.json_get::<_, &str, String>("ALL_DGS", &path).unwrap();
-    let dgs_list_json: Vec<Vec<String>> = (serde_json::from_str(&dgs_list_string).unwrap());
-    let dgs_list_json = dgs_list_json.get(0).unwrap() ;
-    for dgs_string in dgs_list_json{
-        let dgs : DedicatedGameServer = serde_json::from_str(&dgs_string).unwrap();
+    let dgs_list_json: Vec<Vec<DedicatedGameServer>> = (serde_json::from_str(&dgs_list_string).unwrap());
+    let dgs_list_json = dgs_list_json.get(0).unwrap().clone() ;
+    for dgs in dgs_list_json{
         let ranks: Vec<i32> = dgs.players.iter().map(|player| { player.rank_id }).collect();
         let median = ranks.get(ranks.len() / 2);
         let rating = match median {
@@ -99,9 +103,8 @@ pub fn get_players_in_dgs(mut connection: redis::Connection, dgs_id: &str) -> Op
         Err(_) => "".to_string()
     };
 
-    let dgs_list: Vec<Vec<String>> = serde_json::from_str(&string_dgs).unwrap();
+    let dgs_list: Vec<Vec<DedicatedGameServer>> = serde_json::from_str(&string_dgs).unwrap();
     let dgs_list = dgs_list.get(0).unwrap().clone();
-    let dgs_list = dgs_list.iter().map(|dgs| serde_json::from_str::<DedicatedGameServer>(dgs).unwrap()).collect::<Vec<DedicatedGameServer>>();
     let dgs_index = dgs_list.iter().position(|dgs | dgs.id.to_string() == dgs_id);
     match dgs_index {
         None => None,

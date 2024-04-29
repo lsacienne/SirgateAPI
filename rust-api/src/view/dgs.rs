@@ -87,11 +87,11 @@ pub async fn add_player_to_dgs(
     ))
 }
 
-#[actix_web::delete("/dgs/removeplayer")]
+#[actix_web::post("/dgs/removeplayer")]
 pub async fn remove_player_from_dgs(
     req: HttpRequest,
     pool: web::Data<DbPool>,
-    player: web::Path<String>
+    player: web::Json<String>
 ) -> actix_web::Result<impl Responder> {
     let claim = match handle_jwt_token(req) {
         Ok(claim) => claim,

@@ -11,7 +11,7 @@ use crate::controller::database_manager::establish_redis_connection;
 //use crate::GLOBAL_CONNECTION;
 use crate::{handle_jwt_token, Claims};
 use crate::controller::client::{add_user, cache_client, get_user_by_email, get_user_by_username, is_client_cached};
-use crate::models::client::{Client, ClientAuth};
+use crate::models::client::{CacheClient, Client, ClientAuth};
 use crate::DbPool;
 
 
@@ -174,7 +174,7 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
     Ok(HttpResponse::Ok().body(create_jwt(claims).unwrap()))
 }
 
-#[actix_web::delete("/logout")]
+#[actix_web::post("/logout")]
 pub async fn logout(req: HttpRequest) -> actix_web::Result<impl Responder> {
     let claim = match handle_jwt_token(req) {
         Ok(claim) => claim,
@@ -195,9 +195,26 @@ pub async fn logout(req: HttpRequest) -> actix_web::Result<impl Responder> {
 }
 
 #[actix_web::get("/singleuser")]
-pub async fn get_user_by_username_email(user: web::Json<ClientAuth>) -> impl Responder {
-    // Deserialize JSON to User struct
-    let user: ClientAuth = user.into_inner();
+pub async fn get_user_by_username_email(req :HttpRequest, pool: web::Data<DbPool> ) ->  actix_web::Result<impl Responder> {
 
-    user.username.to_owned() + " " + &user.email + " " + &user.password
+    let claim = match handle_jwt_token(req) {
+        Ok(claim) => claim,
+        Err(err) => return Err(err)
+    };
+    let id: uuid::Uuid = match claim.extract_uuid() {
+        Ok(id) => id,
+        Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
+    };
+
+    let user = web::block(move || {
+        let mut conn = pool
+            .get()
+            .expect("couldn't get db connection from pool");
+
+        crate::controller::client::get_limited_user_by_id(&mut conn, id)
+    }).await?;
+
+
+    Ok(HttpResponse::Ok().json(user))
+
 }

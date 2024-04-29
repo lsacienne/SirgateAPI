@@ -1,5 +1,5 @@
 use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgConnection, QueryDsl, RunQueryDsl};
-use redis::JsonCommands;
+use redis::{cmd, JsonCommands};
 use crate::models::client::{CacheClient, CacheClientDGS, Client, ClientState, InsertableClient};
 use crate::unescape;
 
@@ -44,7 +44,6 @@ pub fn show_limited_users(connection: &mut PgConnection, limit: i64) -> Vec<Clie
 
 pub fn get_user_by_username(connection: &mut PgConnection, user_name: &str) -> Client {
     use crate::schema::client::dsl::*;
-
     client
         .filter(username.eq(user_name))
         .first(connection)
@@ -58,6 +57,24 @@ pub fn get_user_by_id(connection: &mut PgConnection, user_id: uuid::Uuid) -> Cli
         .filter(id.eq(user_id))
         .first(connection)
         .expect("Error loading user")
+}
+
+pub fn get_limited_user_by_id(connection: &mut PgConnection, user_id: uuid::Uuid) -> CacheClient {
+    use crate::schema::client;
+    use crate::schema::rank;
+
+    let user_client: (uuid::Uuid, String, String) = client::table
+        .inner_join(rank::table.on(client::rank_id.eq(rank::id)))
+        .filter(client::id.eq(user_id))
+        .select((client::id, client::username, rank::rank_name))
+        .first(connection)
+        .expect("Error loading user");
+     CacheClient {
+        id: user_client.0,
+        username: user_client.1,
+        rank: user_client.2,
+        state: ClientState::Online
+    }
 }
 
 pub fn get_user_by_email(connection: &mut PgConnection, _email: &str) -> Client {
@@ -167,10 +184,14 @@ pub fn cache_client_online(redis_connection: &mut redis::Connection, user_id: uu
 pub fn uncache_client(mut redis_connection: redis::Connection, user_id: uuid::Uuid) -> CacheClient {
     let client_list_string = redis_connection.json_get::<_, _, String>("ALL_CLIENTS", "$").unwrap();
     let client_list = serde_json::from_str::<Vec<Vec<CacheClient>>>(&client_list_string).unwrap();
-    let client_list =client_list.get(0).unwrap();    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
+    let client_list =client_list.get(0).unwrap();
+    let client_index = client_list.iter().position(|client| client.id == user_id).unwrap();
     let mut client = client_list.get(client_index).unwrap().clone();
-    redis_connection.json_arr_pop::<_, _, String>("ALL_CLIENTS","$", client_index.try_into().unwrap()).unwrap();
-    
+
+    let mut cmd = cmd("JSON.ARRPOP");
+    cmd.arg("ALL_CLIENTS").arg("$").arg(client_index as i64);
+
+    let _: () = cmd.query(&mut redis_connection).unwrap();
     client.state = ClientState::Disconnected;
     client
 }
