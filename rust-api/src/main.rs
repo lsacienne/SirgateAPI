@@ -82,6 +82,7 @@ async fn main() -> std::io::Result<()> {
             .service(rust_api::view::dgs::add_player_to_dgs)
             .service(rust_api::view::dgs::remove_player_from_dgs)
             .service(rust_api::view::dgs::add_player_to_dgs)
+            .service(rust_api::view::dgs::login_server)
             .service(rust_api::view::friends::get_all_friends)
             .service(rust_api::view::friends::add_friend)
             .service(rust_api::view::ranking::update_rank)

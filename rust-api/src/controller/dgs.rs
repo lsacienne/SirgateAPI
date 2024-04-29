@@ -131,7 +131,7 @@ pub fn add_dgs<'a>(
         email,
         password: password_hash,
         salt,
-        rank_id: 2
+        role_id: 2
     };
 
     diesel::insert_into(client::table)

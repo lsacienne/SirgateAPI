@@ -34,6 +34,6 @@ pub struct InsertableDGS<'a> {
     pub email: &'a str,
     pub password: &'a str,
     pub salt: &'a str,
-    pub rank_id: i32
+    pub role_id: i32
 
 }
