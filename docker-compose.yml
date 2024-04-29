@@ -38,34 +38,34 @@ services:
     env_file:
       - ./rust-api/.env
 
-  shooter-serv1:
-    build:
-      context: shooter-server
-      args:
-        USERNAME: server1
-        EMAIL: server1
-        PASSWORD: a
-    ports:
-      - "7777:7777"
-    depends_on:
-      - webapp
+  # shooter-serv1:
+  #   build:
+  #     context: shooter-server
+  #     args:
+  #       USERNAME: server1
+  #       EMAIL: server1
+  #       PASSWORD: a
+  #   ports:
+  #     - "7777:7777"
+  #   depends_on:
+  #     - webapp
 
-    networks:
-        - server-network
-  shooter-serv2:
-    build:
-      context: shooter-server
-      args:
-        USERNAME: server2
-        EMAIL: server2
-        PASSWORD: a
-    ports:
-      - "7778:7777"
-    depends_on:
-      - webapp
+  #   networks:
+  #       - server-network
+  # shooter-serv2:
+  #   build:
+  #     context: shooter-server
+  #     args:
+  #       USERNAME: server2
+  #       EMAIL: server2
+  #       PASSWORD: a
+  #   ports:
+  #     - "7778:7777"
+  #   depends_on:
+  #     - webapp
 
-    networks:
-        - server-network
+  #   networks:
+  #       - server-network
 
 volumes:
   mydb-shootervolume:
