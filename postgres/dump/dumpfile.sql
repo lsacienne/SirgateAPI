@@ -379,3 +379,5 @@ GRANT ALL ON SCHEMA public TO shooteradmin;
 -- PostgreSQL database dump complete
 --
 
+INSERT INTO public.achievement ( name, description, image) VALUES ('first', 'Has played his first game', 'ff.png');
+INSERT INTO public.achievement ( name, description, image) VALUES ('from the grave', 'has died for the first time', 'ff.png');

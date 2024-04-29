@@ -1,46 +1,8 @@
 use std::env;
 use actix_web::{App, get, HttpServer, Responder};
-use diesel::{connection, PgConnection};
-use serde::{Deserialize, Serialize};
-use lazy_static::lazy_static;
-use crate::controller::database_manager::establish_connection;
-use std::sync::Mutex;
+use diesel::PgConnection;
 use diesel::r2d2::ConnectionManager;
-use r2d2_postgres::{postgres, PostgresConnectionManager};
-use r2d2::PooledConnection;
-use r2d2_postgres::postgres::Config;
-
-
-mod view{
-    pub mod client;
-    pub mod achievement;
-    pub mod ranking;
-}
-mod models{
-    pub mod client;
-    pub mod achievement;
-    pub mod friends;
-    pub mod dgs;
-    pub mod ranking;
-}
-mod controller{
-    pub mod database_manager;
-    pub mod dgs;
-    pub mod client;
-    pub mod ranking;
-    pub mod friends;
-}
-
-mod schema;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    iss: String,
-    sub: String,
-    iat: i64,
-    exp: i64,
-}
-
+use rust_api::controller;
 
 #[get("/")]
 pub async fn index() -> impl Responder {
@@ -48,8 +10,8 @@ pub async fn index() -> impl Responder {
 }
 
 /*fn main() {
-/*fn main() {
     // Hash a password
+
     let salt = generate_salt();
     let password_hash = hash_password("aled", &salt).unwrap();
 
@@ -79,7 +41,6 @@ pub async fn index() -> impl Responder {
  /*lazy_static!{
        pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
      }*/
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -90,44 +51,46 @@ async fn main() -> std::io::Result<()> {
         Ok(uri) => uri,
         Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
     };*/
-    println!("Launched server ");
 
-} */
-
-
- /*lazy_static!{
-       pub static ref GLOBAL_CONNECTION: Mutex<PgConnection> = Mutex::new(establish_connection());
-     }*/
-type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-
-    dotenv::dotenv().ok();
-    let uri = match env::var("API_Address") {
-        Ok(uri) => uri,
-        Err(err) => {println!("Failed to get address: {}", err); return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to get APIURI"))}
+    let con = controller::database_manager::establish_redis_connection();
+    let mut con = match con {
+        Ok(connection) => {
+            println!("Connected to Redis");
+            connection
+        },
+        Err(err) => panic!("Failed to connect to Redis: {}", err)
     };
-    println!("Launched server at {}" , uri);
-    HttpServer::new(|| {
+    controller::dgs::setup_dgs_map(&mut con);
+    controller::client::initialize_client_cache(&mut con);
 
-        let url =  env::var("DATABASE_URL").unwrap() ;
-
-        let manager = ConnectionManager::<PgConnection>::new(url);
+    let url =  env::var("DATABASE_URL").unwrap() ;
+    let manager = ConnectionManager::<PgConnection>::new(url);
         let pool = r2d2::Pool::builder()
             .build(manager)
             .expect("database URL should be valid path to Postgres DB file");
+
+    println!("Launched server ...");
+    HttpServer::new(move || {
         App::new()
-            .app_data(actix_web::web::Data::new(pool))
+            .app_data(actix_web::web::Data::new(pool.clone()))
             .service(index)
-            .service(view::client::login)
-            .service(view::client::register)
-            .service(view::client::get_users)
-            .service(view::client::get_user_by_username_email)
-            .service(view::client::add_dgs)
-            .service(view::client::dgs_login)
+            .service(rust_api::view::client::login)
+            .service(rust_api::view::client::register)
+            .service(rust_api::view::client::get_user_by_username_email)
+            .service(rust_api::view::dgs::find_dgs)
+            .service(rust_api::view::dgs::register_dgs)
+            .service(rust_api::view::dgs::add_player_to_dgs)
+            .service(rust_api::view::dgs::remove_player_from_dgs)
+            .service(rust_api::view::dgs::add_player_to_dgs)
+            .service(rust_api::view::friends::get_all_friends)
+            .service(rust_api::view::friends::add_friend)
+            .service(rust_api::view::ranking::update_rank)
+            .service(rust_api::view::achievement::add_achievement)
+            .service(rust_api::view::achievement::get_all_achievements)
+            .service(rust_api::view::dgs::get_clients_in_dgs)
+            .service(rust_api::view::client::logout)
     })
-        .bind("0.0.0.0:8080")?
-        .run()
-        .await
+    .bind("0.0.0.0:8080")?
+    .run()
+    .await
 }

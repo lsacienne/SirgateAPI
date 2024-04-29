@@ -49,3 +49,8 @@ pub fn update_rank(connection: &mut PgConnection, client_id: uuid::Uuid, _rank_n
         .get_result(connection)
         .expect("Error updating rank")
 }
+
+pub fn update_rank_by_name(connection: &mut PgConnection, client_name: &str, _rank_name: &str) -> Client {
+    let client_id = crate::controller::client::get_user_by_username(connection, client_name).id;
+    update_rank(connection, client_id, _rank_name)
+}

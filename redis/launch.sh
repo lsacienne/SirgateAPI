@@ -1,0 +1,1 @@
+redis-cli SET ALL_DGS '{"dgs_cluster": "ALL_DGS","dgs": [] }'

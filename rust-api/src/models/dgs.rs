@@ -1,12 +1,19 @@
+use diesel::Insertable;
 use serde::{Deserialize, Serialize};
-use crate::models::client::CacheClient;
+use crate::models::client::CacheClientDGS;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DedicatedGameServer {
-    pub name: String,
+    pub id: uuid::Uuid,
     pub ip: std::net::IpAddr,
     pub port: u16,
-    pub players: Vec<CacheClient>,
+    pub players: Vec<CacheClientDGS>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DedicatedGameServerRegister {
+    pub ip: std::net::IpAddr,
+    pub port: u16,
 }
 
 pub struct RatedDgs {
@@ -18,4 +25,15 @@ pub struct RatedDgs {
 pub struct DgsCluster {
     pub name: String,
     pub dgs: Vec<DedicatedGameServer>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::client)]
+pub struct InsertableDGS<'a> {
+    pub username: &'a str,
+    pub email: &'a str,
+    pub password: &'a str,
+    pub salt: &'a str,
+    pub rank_id: i32
+
 }

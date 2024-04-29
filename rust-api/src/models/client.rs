@@ -15,6 +15,7 @@ pub struct Client {
     pub role_id: i32,
     pub rank_id: i32,
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClientAuth {
     pub username: String,
@@ -32,8 +33,25 @@ pub struct InsertableClient<'a> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CacheClient {
+pub struct CacheClientDGS {
     pub id: uuid::Uuid,
     pub username: String,
     pub rank_id: i32,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum ClientState {
+    InGame(String),
+    Online,
+    Disconnected
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CacheClient {
+    pub id: uuid::Uuid,
+    pub username: String,
+    pub rank: String,
+    pub state: ClientState
+}
+
+
