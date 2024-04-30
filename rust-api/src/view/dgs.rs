@@ -105,6 +105,7 @@ pub async fn remove_player_from_dgs(
         Err(err) => return Err(actix_web::error::ErrorInternalServerError(err))
     };
 
+    println!("Removing player {} from DGS: {}", player, id);
     let player_client = web::block(move || {
         // Obtaining a connection from the pool is also a potentially blocking operation.
         // So, it should be called within the `web::block` closure, as well.

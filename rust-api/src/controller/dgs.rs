@@ -51,6 +51,7 @@ pub fn remove_player_from_dgs(mut connection: redis::Connection, dgs_id: &str, p
         Err(_) => "".to_string()
     };
 
+
     let dgs_list: Vec<Vec<DedicatedGameServer>> = serde_json::from_str(&string_dgs).unwrap();
     let dgs_list = dgs_list.get(0).unwrap().clone();
     let dgs_index = dgs_list.iter().position(|dgs| dgs.id.to_string() == dgs_id).unwrap();
