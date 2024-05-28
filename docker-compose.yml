@@ -24,14 +24,29 @@ services:
     networks:
       - redis-network
 
+  db-initializer:
+    build: 
+      context: rust-api
+      dockerfile: Dockerfile-register
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - postgres-network
+      - redis-network
+    env_file:
+      - ./rust-api/.env
     
   webapp:
-    build: rust-api
+    build: 
+      context: rust-api
+      dockerfile: Dockerfile-api
     ports:
       - "8080:8080"
     depends_on:
       - postgres
       - redis
+      - db-initializer
     networks:
       - postgres-network
       - redis-network
