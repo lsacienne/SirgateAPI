@@ -225,7 +225,7 @@ pub async fn login_server(     server: web::Json<ClientAuth>,
 
                 let salt = crate::view::client::generate_salt();
                 let hash = crate::view::client::hash_password(&*creds.password, &salt).unwrap();
-                crate::controller::dgs::add_dgs(&mut conn, &*creds.username, &*creds.email, &*hash.hash.unwrap().to_string(), salt.as_ref())
+                crate::controller::dgs::add_dgs(&mut conn, &*creds.username, &*creds.email, &*hash.hash.unwrap().to_string(), salt.as_ref()).unwrap()
             }).await?;
             claims.iss = server.id.to_string();
             claims.sub = server.email.clone();

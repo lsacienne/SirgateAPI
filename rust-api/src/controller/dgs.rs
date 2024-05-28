@@ -1,5 +1,5 @@
 use diesel::{PgConnection, RunQueryDsl};
-use crate::models::client::{CacheClient, CacheClientDGS, Client, InsertableClient};
+use crate::models::client::{ CacheClientDGS, Client};
 use crate::models::dgs::{DedicatedGameServer, DgsCluster, InsertableDGS, RatedDgs};
 use redis::{cmd, JsonCommands};
 // Add this line
@@ -76,7 +76,7 @@ pub fn find_dgs_by_rank(mut connection: redis::Connection, rank: i32) -> Dedicat
     let mut dgs_list: Vec<RatedDgs> = vec![];
 
     let dgs_list_string = connection.json_get::<_, &str, String>("ALL_DGS", &path).unwrap();
-    let dgs_list_json: Vec<Vec<DedicatedGameServer>> = (serde_json::from_str(&dgs_list_string).unwrap());
+    let dgs_list_json: Vec<Vec<DedicatedGameServer>> = serde_json::from_str(&dgs_list_string).unwrap();
     let dgs_list_json = dgs_list_json.get(0).unwrap().clone() ;
     for dgs in dgs_list_json{
         let ranks: Vec<i32> = dgs.players.iter().map(|player| { player.rank_id }).collect();
@@ -124,7 +124,7 @@ pub fn add_dgs<'a>(
     email: &'a str,
     password_hash: &'a str,
     salt: &'a str,
-) -> Client {
+) -> Result<Client, diesel::result::Error> {
     use crate::schema::client;
 
     let new_dgs = InsertableDGS {
@@ -138,5 +138,4 @@ pub fn add_dgs<'a>(
     diesel::insert_into(client::table)
         .values(&new_dgs)
         .get_result(connection)
-        .expect("Error saving new user")
 }

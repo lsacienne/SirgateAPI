@@ -11,31 +11,10 @@ use crate::controller::database_manager::establish_redis_connection;
 //use crate::GLOBAL_CONNECTION;
 use crate::{handle_jwt_token, Claims};
 use crate::controller::client::{add_user, cache_client, get_user_by_email, get_user_by_username, is_client_cached};
-use crate::models::client::{CacheClient, Client, ClientAuth};
+use crate::models::client::{Client, ClientAuth};
 use crate::DbPool;
 
-
-/*#[actix_web::post("/users")]
-pub async fn add_user(user: web::Json<models::user>) -> impl Responder {
-    // Here you can add the user to the database.
-    // For now, let's just return the user data as JSON.
-    HttpResponse::Ok().json(user.into_inner())
-}*/
-
-
-/***
-    TODO :
-        - login
-        - register
-        - Add a new user to the database
-        - Get all user form the database
-        - Get a user by username+email
-        - Update a user by id
-        - Delete a user by id
-        - Add DGS to database
- */
-
-pub(crate) fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<PasswordHash<'a>, argon2::password_hash::Error> {
+pub fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Result<PasswordHash<'a>, argon2::password_hash::Error> {
     let argon2 = Argon2::default();
 
     let salt_clone = salt.as_salt().to_owned();
@@ -45,11 +24,11 @@ pub(crate) fn hash_password<'a>(password: &'a str, salt: &'a SaltString) -> Resu
     Ok(password_hash)
 }
 
-pub(crate) fn generate_salt() -> SaltString {
+pub fn generate_salt() -> SaltString {
     SaltString::generate(&mut OsRng)
 }
 
-pub(crate) fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn create_jwt(claims: Claims) -> Result<String, jsonwebtoken::errors::Error> {
     dotenv::dotenv().ok();
     let secret = match dotenv::var("JWT_SECRET") {
         Ok(secret) => secret,
@@ -157,7 +136,7 @@ pub async fn register(pool: web::Data<DbPool>, user: web::Json<ClientAuth>) -> a
     let claims = Claims {
         iss: client.id.clone().to_string(),
         sub: client.email.clone().to_string(),
-        iat:now,
+        iat: now,
         exp: i64::MAX,
     };
 

@@ -2,7 +2,6 @@ use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, PgConnection, 
 use diesel::result::Error;
 use redis::{cmd, JsonCommands};
 use crate::models::client::{CacheClient, CacheClientDGS, Client, ClientState, InsertableClient};
-use crate::unescape;
 
 pub fn add_user<'a>(
     connection: &mut PgConnection,
